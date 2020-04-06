@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">   
+	      	<level>debug</level>   
+	    </filter>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} %replace(%p){'(\w).*$','$1'}-%t:%m %replace(%caller{1}){'Caller.*at ',''}</pattern>
+		</encoder>
+	</appender>
+	<appender name="errorFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/errorFile.log</file>
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">   
+      		<level>ERROR</level>   
+    	</filter>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/errorFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} %replace(%p){'(\w).*$','$1'}-%t:%m %replace(%caller{1}){'Caller.*at ',''}</pattern>
+		</encoder>
+	</appender>
+	<appender name="rootFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/rootFile.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/rootFile.%d{yyyy-MM-dd}.log</fileNamePattern>
+		</rollingPolicy>
+		<encoder>
+			<pattern>%d{HH:mm:ss.SSS} %replace(%p){'(\w).*$','$1'}-%t:%m %replace(%caller{1}){'Caller.*at ',''}</pattern>
+		</encoder>
+	</appender>
+	<logger name="com.dlz" level="debug" additivity="false">  
+	    <appender-ref ref="console" />
+	    <appender-ref ref="errorFile" />
+	    <appender-ref ref="rootFile"/>  
+	</logger> 
+	<root level="error">
+		<appender-ref ref="console" />
+		<appender-ref ref="errorFile" />
+	</root>
+</configuration>
