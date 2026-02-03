@@ -8,9 +8,6 @@ import java.util.List;
 
 /**
  * 删除指定目录下的所有空文件夹
- *
- * @author zdw
- *
  */
 public class EmputyFolderFinder {
 	List<File> list = new ArrayList<File>();
@@ -45,9 +42,6 @@ public class EmputyFolderFinder {
 		}
 	}
 
-	/**
-	 * @param args
-	 */
 	@Test
 	public void find() {
 		EmputyFolderFinder m = new EmputyFolderFinder();

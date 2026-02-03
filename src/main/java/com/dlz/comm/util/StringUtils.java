@@ -11,9 +11,9 @@ import java.util.regex.Pattern;
 
 /**
  * 字符串工具类
- * 
+ *
  * 提供便捷的字符串处理功能，包括字符串格式化、判空、补零、首字母大写等操作
- * 
+ *
  * @author dingkui
  * @since 2023
  */
@@ -44,7 +44,7 @@ public class StringUtils {
                 if(sb == null){
                     sb = new StringBuilder();
                 }
-                sb.append(retStr, 0, mat.start());
+                sb.append(retStr, end, mat.start());
                 sb.append(getReplaceStr(group, c, 2));
                 end = mat.end();
             }
@@ -100,7 +100,7 @@ public class StringUtils {
 
     /**
      * 根据类名生成Bean ID
-     * 
+     *
      * 规则：将类名首字母小写
      *
      * @param className 完整类名
@@ -113,7 +113,7 @@ public class StringUtils {
 
     /**
      * 根据类生成Bean ID
-     * 
+     *
      * 规则：将类名首字母小写
      *
      * @param clazz 类对象
@@ -125,14 +125,14 @@ public class StringUtils {
 
     private static Pattern myMsgPattern = Pattern.compile("\\{([\\w]*)\\}");
     private static Pattern myMsgPatternSub = Pattern.compile(".*([\\d]+)$");
-    
+
     /**
      * 格式化文本，{} 表示占位符
-     * 
+     *
      * 支持位置占位符，如 {xxx0},{0}表示用参数下标，支持用字符说明，结尾的数字是下标
      * 无下标时，默认采用当前所在的序号
      * 下标无效时，此处不做替换
-     * 
+     *
      * 示例：
      * 通常使用：formatMsg("this is {} for {}", "a", "b") -> this is a for b
      * 指定下标： formatMsg("this is {1} for {}", "a", "b") -> this is b for b
@@ -157,7 +157,7 @@ public class StringUtils {
             if(indexStr.length() > 0){
                 indexStr = myMsgPatternSub.matcher(indexStr).replaceAll("$1");
                 if (indexStr.length() > 0) {
-                     index = Integer.parseInt(indexStr);
+                    index = Integer.parseInt(indexStr);
                 }
             }
             sb.append(msg, end, mat.start());
@@ -176,10 +176,10 @@ public class StringUtils {
      * 替换内容匹配符：如 ${bb}
      */
     private static Pattern PATTERN_REPLACE = Pattern.compile("\\$\\{(\\w[\\.\\w]*)\\}");
-    
+
     /**
      * 对消息语句中 ${aa} 的内容进行文本替换
-     * 
+     *
      * @param input 待处理的输入字符串
      * @param m JSONMap对象，提供替换值
      * @return 替换后的字符串
@@ -196,6 +196,8 @@ public class StringUtils {
             sb.append(msg, start, mat.start());
             if(o != null){
                 sb.append(o);
+            }else{
+                sb.append("{"+key+"}");
             }
             start = mat.end();
         }
@@ -219,9 +221,9 @@ public class StringUtils {
 
     /**
      * 检查对象是否为空
-     * 
+     *
      * 支持的类型包括：Collection、Map、Array、CharSequence
-     * 
+     *
      * @param obj 待检查的对象
      * @return 如果对象为空返回true，否则返回false
      */
@@ -250,7 +252,7 @@ public class StringUtils {
 
     /**
      * 检查对象数组中是否存在任意一个空对象
-     * 
+     *
      * @param cs 待检查的对象数组
      * @return 如果存在任意一个空对象返回true，否则返回false
      */
@@ -262,17 +264,17 @@ public class StringUtils {
         }
         return false;
     }
-    
+
     /**
      * 判断输入的字符序列是否为空或纯空格
-     * 
+     *
      * 示例：
      * StringUtils.isBlank(null) = true
      * StringUtils.isBlank("") = true
      * StringUtils.isBlank(" ") = true
      * StringUtils.isBlank("12345") = false
      * StringUtils.isBlank(" 12345 ") = false
-     * 
+     *
      * @param cs 待检查的字符序列
      * @return 如果字符序列为空或纯空格返回true，否则返回false
      */
@@ -291,7 +293,7 @@ public class StringUtils {
 
     /**
      * 检查字符序列数组中是否存在任意一个空白字符序列
-     * 
+     *
      * @param cs 待检查的字符序列数组
      * @return 如果存在任意一个空白字符序列返回true，否则返回false
      */
@@ -306,7 +308,7 @@ public class StringUtils {
 
     /**
      * 检查字符序列数组中是否全部为空白字符序列
-     * 
+     *
      * @param cs 待检查的字符序列数组
      * @return 如果全部为空白字符序列返回true，否则返回false
      */
@@ -321,7 +323,7 @@ public class StringUtils {
 
     /**
      * 检查字符序列是否以指定的任一字符串开头
-     * 
+     *
      * @param sequence 待检查的字符序列
      * @param searchStrings 查找的字符串数组
      * @return 如果以任一字符串开头返回true，否则返回false
@@ -340,7 +342,7 @@ public class StringUtils {
 
     /**
      * 检查字符序列是否以指定字符串开头
-     * 
+     *
      * @param sequence 待检查的字符序列
      * @param searchString 指定的字符串
      * @return 如果以指定字符串开头返回true，否则返回false
@@ -360,27 +362,60 @@ public class StringUtils {
 
     /**
      * 检查字符序列是否为数值
-     * 
+     *
      * @param o 待检查的字符序列
      * @return 如果是数值返回true，否则返回false
      */
     public static boolean isNumber(CharSequence o) {
-        return o.length() > 0 && o.toString().replaceAll("[\\d\\.+-]", "").length() == 0;
+        if (o == null || o.length() == 0) {
+            return false;
+        }
+        
+        String str = o.toString();
+        
+        // 排除无效的特殊情况
+        if (str.equals("-") || str.equals("+") || str.equals(".") || 
+            str.equals("+.") || str.equals("-.") || str.startsWith(".") ||
+            str.endsWith(".")) {
+            return false;
+        }
+        
+        // 使用更高效的字符遍历检查代替正则表达式
+        boolean hasDigit = false;
+        int dotCount = 0;
+        int signCount = 0;
+        
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            if (Character.isDigit(c)) {
+                hasDigit = true;
+            } else if (c == '.') {
+                dotCount++;
+                if (dotCount > 1) return false; // 多个小数点
+            } else if (c == '+' || c == '-') {
+                signCount++;
+                if (signCount > 1 || i != 0) return false; // 多个符号或符号不在开头
+            } else {
+                return false; // 包含非法字符
+            }
+        }
+        
+        return hasDigit; // 必须包含至少一个数字
     }
 
     /**
      * 检查字符序列是否为长整型或整型
-     * 
+     *
      * @param o 待检查的字符序列
      * @return 如果是长整型或整型返回true，否则返回false
      */
     public static boolean isLongOrInt(CharSequence o) {
-        return o.length() > 0 && o.toString().replaceAll("[\\d+-]", "").length() == 0;
+        return o!=null && o.length() > 0 && o.toString().replaceAll("[\\d+-]", "").length() == 0;
     }
 
     /**
      * 检查对象是否非空
-     * 
+     *
      * @param cs 待检查的对象
      * @return 如果对象非空返回true，否则返回false
      */
@@ -390,13 +425,13 @@ public class StringUtils {
 
     /**
      * 将字符串首字母大写
-     * 
+     *
      * 示例：
      * StringUtils.capitalize(null)  = null
      * StringUtils.capitalize("")    = ""
      * StringUtils.capitalize("cat") = "Cat"
      * StringUtils.capitalize("cAt") = "CAt"
-     * 
+     *
      * @param str 待处理的字符串
      * @return 首字母大写后的字符串
      */
@@ -415,7 +450,7 @@ public class StringUtils {
 
     /**
      * 在字符串左边添加指定字符达到指定的长度
-     * 
+     *
      * 示例：
      * StringUtils.leftPad(null, *, *)     = null
      * StringUtils.leftPad("", 3, 'z')     = "zzz"
@@ -423,7 +458,7 @@ public class StringUtils {
      * StringUtils.leftPad("bat", 5, 'z')  = "zzbat"
      * StringUtils.leftPad("bat", 1, 'z')  = "bat"
      * StringUtils.leftPad("bat", -1, 'z') = "bat"
-     * 
+     *
      * @param str 待处理的字符串
      * @param size 目标长度
      * @param padChar 填充字符
@@ -437,22 +472,26 @@ public class StringUtils {
         if (pads <= 0) {
             return str; // returns original String when possible
         }
-        return repeat(padChar, pads).concat(str);
+        final String pre = str.startsWith("-") || str.startsWith("+") ? str.substring(0,1) : "";
+        return pre.length()>0?pre+repeat(padChar, pads)+str.substring(1) : repeat(padChar, pads).concat(str);
     }
 
     /**
      * 构造指定个数的字符的字符串
-     * 
+     *
      * 示例：
      * StringUtils.repeat('e', 0)  = ""
      * StringUtils.repeat('e', 3)  = "eee"
      * StringUtils.repeat('e', -2) = ""
-     * 
+     *
      * @param ch 要重复的字符
      * @param repeat 重复次数
      * @return 重复字符构成的字符串
      */
     public static String repeat(final char ch, int repeat) {
+        if(repeat<=0){
+            return "";
+        }
         final char[] buf = new char[repeat];
         while (repeat-- > 0) {
             buf[repeat] = ch;
@@ -462,14 +501,14 @@ public class StringUtils {
 
     /**
      * 使用指定分隔符合并数组元素
-     * 
+     *
      * 示例：
      * StringUtils.join(null, *)         = null
      * StringUtils.join([], *)           = ""
      * StringUtils.join([null], *)       = ""
      * StringUtils.join([1, 2, 3], ";")  = "1;2;3"
      * StringUtils.join([1, 2, 3], null) = "123"
-     * 
+     *
      * @param array 待合并的数组
      * @param separator 分隔符
      * @return 合并后的字符串
@@ -490,7 +529,7 @@ public class StringUtils {
 
     /**
      * 将数组转换为列表
-     * 
+     *
      * @param array 待转换的数组
      * @return 转换后的列表
      */
@@ -500,7 +539,7 @@ public class StringUtils {
 
     /**
      * 将列表转换为数组
-     * 
+     *
      * @param list 待转换的列表
      * @return 转换后的数组
      */
@@ -510,7 +549,7 @@ public class StringUtils {
 
     /**
      * 使用指定分隔符合并集合元素
-     * 
+     *
      * @param array 待合并的集合
      * @param separator 分隔符
      * @return 合并后的字符串
@@ -521,7 +560,7 @@ public class StringUtils {
 
     /**
      * 使用指定字符分隔符合并集合元素
-     * 
+     *
      * @param array 待合并的集合
      * @param separator 分隔符
      * @return 合并后的字符串
@@ -532,7 +571,7 @@ public class StringUtils {
 
     /**
      * 按正则表达式分割字符串
-     * 
+     *
      * @param value 待分割的字符串
      * @param regex 分割正则表达式
      * @return 分割后的字符串数组

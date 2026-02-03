@@ -52,7 +52,7 @@ public class FieldReflections {
 
     /**
      * 直接设置对象属性值, 无视private/protected修饰符, 不经过setter函数.
-          */
+     */
     public static boolean setValue(final Object obj, final String fieldName, final Object value, final boolean ignore) {
         if (obj == null) {
             if(ignore){
@@ -60,7 +60,11 @@ public class FieldReflections {
             }
             throw new IllegalArgumentException("Could not setValue [" + fieldName + "] on target [null]");
         }
-        return setValue(obj, getField(obj, fieldName,ignore), value);
+        final Field field = getField(obj, fieldName, ignore);
+        if(ignore && field==null){
+            return false;
+        }
+        return setValue(obj, field, value);
     }
 
     /**
@@ -158,7 +162,8 @@ public class FieldReflections {
         if (name == null || name.length() == 0) {
             return name;
         }
-        if (name.equals(name.toUpperCase(Locale.ROOT))){
+//        if (name.equals(name.toUpperCase(Locale.ROOT))){
+        if (name.length() > 1 && Character.isUpperCase(name.charAt(1)) && Character.isUpperCase(name.charAt(0))){
             return name;
         }
         char chars[] = name.toCharArray();

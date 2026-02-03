@@ -3,8 +3,8 @@ package com.dlz.comm.util;
 import com.dlz.comm.exception.SystemException;
 import com.dlz.comm.json.JSONList;
 import com.dlz.comm.json.JSONMap;
-import com.dlz.comm.util.jackson.DlzJavaTimeModule;
-import com.dlz.comm.util.jackson.JacksonObjectDeserializer;
+import com.dlz.comm.json.jackson.DlzJavaTimeModule;
+import com.dlz.comm.json.jackson.JacksonObjectDeserializer;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,15 +29,15 @@ import java.util.regex.Pattern;
 
 /**
  * Jackson JSON处理工具类
- * 
+ *
  * 提供便捷的JSON序列化、反序列化、类型转换等功能
- * 
+ *
  * 主要特性包括：
  * 1. 支持自定义对象与JSON字符串互转
  * 2. 支持复杂类型的反序列化
  * 3. 支持JSON路径取值
  * 4. 提供统一的日期时间格式处理
- * 
+ *
  * @author dingkui
  * @since 2013-09-13
  */
@@ -95,12 +95,12 @@ public class JacksonUtil {
 //        //反序列化时，属性不存在的兼容处理s
 //        objectMapper.getDeserializationConfig().withoutFeatures(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 //        //日期格式化
-          objectMapper.registerModule(DlzJavaTimeModule.INSTANCE);
+        objectMapper.registerModule(DlzJavaTimeModule.INSTANCE);
     }
 
     /**
      * 获取ObjectMapper实例
-     * 
+     *
      * @return ObjectMapper实例
      */
     public static ObjectMapper getInstance() {
@@ -109,7 +109,7 @@ public class JacksonUtil {
 
     /**
      * 将对象转换为JSON字符串
-     * 
+     *
      * @param o 待转换的对象
      * @return JSON字符串，如果转换失败则抛出异常
      */
@@ -137,7 +137,7 @@ public class JacksonUtil {
 
     /**
      * 将字符串反序列化为JSONMap对象
-     * 
+     *
      * @param content JSON字符串内容
      * @return JSONMap对象
      */
@@ -147,7 +147,7 @@ public class JacksonUtil {
 
     /**
      * 将对象反序列化为JSONMap对象
-     * 
+     *
      * @param content 待转换的内容
      * @return JSONMap对象
      */
@@ -157,7 +157,7 @@ public class JacksonUtil {
 
     /**
      * 将字符串反序列化为指定类型对象
-     * 
+     *
      * @param content JSON字符串内容
      * @param valueType 目标类型
      * @param <T> 目标类型泛型
@@ -169,7 +169,7 @@ public class JacksonUtil {
 
     /**
      * 将对象反序列化为指定类型对象
-     * 
+     *
      * @param content 待转换的内容
      * @param valueType 目标类型
      * @param <T> 目标类型泛型
@@ -181,7 +181,7 @@ public class JacksonUtil {
 
     /**
      * 将对象反序列化为指定类型列表
-     * 
+     *
      * @param content 待转换的内容
      * @param elementClass 列表元素类型
      * @param <T> 列表元素类型泛型
@@ -193,7 +193,7 @@ public class JacksonUtil {
 
     /**
      * 将字符串反序列化为JSONList对象
-     * 
+     *
      * @param content JSON字符串内容
      * @return JSONList对象
      */
@@ -203,7 +203,7 @@ public class JacksonUtil {
 
     /**
      * 将对象反序列化为JSONList对象
-     * 
+     *
      * @param content 待转换的内容
      * @return JSONList对象
      */
@@ -213,7 +213,7 @@ public class JacksonUtil {
 
     /**
      * 将字符串反序列化为指定类型对象
-     * 
+     *
      * @param content JSON字符串内容
      * @param valueType 目标类型
      * @param <T> 目标类型泛型
@@ -287,7 +287,7 @@ public class JacksonUtil {
 
     /**
      * 将对象反序列化为指定类型对象
-     * 
+     *
      * @param content 待转换的内容，支持多种类型
      * @param valueType 目标类型
      * @param <T> 目标类型泛型
@@ -321,7 +321,7 @@ public class JacksonUtil {
 
     /**
      * 将对象反序列化为指定类型对象
-     * 
+     *
      * @param content 待转换的内容，支持多种类型
      * @param valueType 目标类型引用
      * @param <T> 目标类型泛型
@@ -353,7 +353,7 @@ public class JacksonUtil {
 
     /**
      * 将字符串反序列化为指定类型对象
-     * 
+     *
      * @param content JSON字符串内容
      * @param valueType 目标类型引用
      * @param <T> 目标类型泛型
@@ -370,7 +370,7 @@ public class JacksonUtil {
 
     /**
      * 将字符串反序列化为指定类型列表
-     * 
+     *
      * @param content JSON字符串内容
      * @param valueType 列表元素类型
      * @param <T> 列表元素类型泛型
@@ -566,7 +566,7 @@ public class JacksonUtil {
 
     /**
      * 从列表中按路径获取对象
-     * 
+     *
      * @param list 列表
      * @param key 路径表达式
      * @return 获取的对象
@@ -586,7 +586,7 @@ public class JacksonUtil {
 
     /**
      * 从Map中按路径获取对象
-     * 
+     *
      * @param para Map对象
      * @param key 路径表达式
      * @return 获取的对象
@@ -671,11 +671,11 @@ public class JacksonUtil {
     }
 
     private static Pattern JsonObjPattern = Pattern.compile("^\\{(([\"\\w]+:.+)||)\\}$");
-    private static Pattern JsonArrayPattern = Pattern.compile("^\\[[^\\[^\\]]*\\]$");
+    private static Pattern JsonArrayPattern = Pattern.compile("^\\[.*\\]$");
 
     /**
      * 判断字符串是否为JSON对象格式
-     * 
+     *
      * @param str 待检测的字符串
      * @return 如果是JSON对象格式返回true，否则返回false
      */
@@ -685,7 +685,7 @@ public class JacksonUtil {
 
     /**
      * 判断字符串是否为JSON数组格式
-     * 
+     *
      * @param str 待检测的字符串
      * @return 如果是JSON数组格式返回true，否则返回false
      */

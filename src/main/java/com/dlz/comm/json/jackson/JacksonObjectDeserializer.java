@@ -1,4 +1,4 @@
-package com.dlz.comm.util.jackson;
+package com.dlz.comm.json.jackson;
 
 import com.dlz.comm.json.JSONList;
 import com.dlz.comm.json.JSONMap;

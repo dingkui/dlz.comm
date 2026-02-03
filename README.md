@@ -1,132 +1,81 @@
-# DLZ COMM - 通用工具包
-
-DLZ COMM 是一个功能丰富的通用工具包，提供了对象转换、JSON处理、加密解密、日期计算等多种实用功能。
-
-## 目录
-
-- [特色功能](#特色功能)
-- [工具模块文档](#工具模块文档)
-- [快速开始](#快速开始)
-- [特性](#特性)
-- [许可证](#许可证)
-
-## 核心功能
-
-### 1. 对象转换工具类 - ValUtil
-
-`ValUtil` 是一个强大的类型转换工具类，支持多种数据类型之间的转换。
-
+# 🗡️ JSONMap: Java 数据处理的“瑞士军刀”
+> **拒绝强转地狱。拒绝空指针。像 JavaScript 一样在 Java 中“丝滑”操作 JSON。**
+你是否受够了 Java 中处理复杂 JSON/Map 时的笨重？
+JSONMap 不是要取代 Jackson，而是要拯救在 **业务逻辑层** 挣扎的你。
+---
+## 💥 3 秒钟，感受降维打击
+### ❌ 曾经的噩梦 (The Old Way)
+为了获取一个深层嵌套的值 `user.profile.tags[0]`，你需要写出一座“金字塔”：
 ```java
-// 参数可以是任意Object类型
-Double aDouble = ValUtil.toDouble("3.35");
-
-// 常用转换方法，覆盖大部分类型转换需求：
-ValUtil.toBigDecimal(obj, defaultV);    // 转换为BigDecimal
-ValUtil.toDouble(obj, defaultV);        // 转换为Double
-ValUtil.toFloat(obj, defaultV);         // 转换为Float
-ValUtil.toInt(obj, defaultV);           // 转换为Integer
-ValUtil.toLong(obj, defaultV);          // 转换为Long
-ValUtil.toArray(obj, clazz);            // 转换为数组
-ValUtil.toArray(obj, defaultV);         // 转换为数组（带默认值）
-ValUtil.toArrayObj(obj, clazz, clazzs); // 转换为对象数组
-ValUtil.toList(obj, defaultV);          // 转换为列表（带默认值）
-ValUtil.toList(obj, clazz);             // 转换为指定类型的列表
-ValUtil.toStr(obj, defaultV);           // 转换为字符串（带默认值）
-ValUtil.toBoolean(obj, defaultV);       // 转换为布尔值（带默认值）
-ValUtil.toDate(obj);                    // 转换为日期,指定识别格式
-ValUtil.toDate(obj, format);            // 转换为日期（指定格式）
-ValUtil.toDateStr(obj);                 // 转换为日期字符串
-ValUtil.toDateStr(obj, format);         // 转换为日期字符串（指定格式）
-ValUtil.toObj(obj, classs);             // 转换为指定对象类型
-```
-
-### 2. JSON路径取值功能
-**核心特色功能**：支持多层级取值——使用点号和数组下标组合，从结构化数据中获取所需值。
-
-使用示例：
-```json
-{
-  "info": {
-    "a": [
-      [{"b": 1}, {"c": 2}],
-      [{"d": 3}, {"e": 4}, {"f": 5}]
-    ]
-  }
+// 😭 这种代码我写吐了...
+Map<String, Object> data = getData();
+if (data != null) {
+    Map<String, Object> user = (Map<String, Object>) data.get("user");
+    if (user != null) {
+        Map<String, Object> profile = (Map<String, Object>) user.get("profile");
+        if (profile != null) {
+            List<String> tags = (List<String>) profile.get("tags");
+            if (tags != null && !tags.isEmpty()) {
+                String tag = tags.get(0); // 终于拿到了...
+            }
+        }
+    }
 }
 ```
-
-- 取出 **c** 属性的值，使用表达式：`info.a[0][1].c`
-- 取出 **f** 属性的值，使用表达式：`info.a[1][2].f`
-- 取出 **f** 所在对象，使用表达式：
-  - 方式1：`info.a[1][2]`
-  - 方式2：`info.a[1][-1]`
-
-#### 关于负数下标的说明
-负数表示从后往前数，-1表示最后一个，-2表示倒数第二个
-
-使用示例：
+### ✅ JSONMap 的降临 (The New Way)
+用一把利器，刺穿所有层级：
 ```java
-String data = "{\"info\":{\"a\":[[{\"b\":1},{\"c\":2}],[{\"d\":3},{\"e\":4},{\"f\":5}]]}}";
-System.out.println("c的值：" + JacksonUtil.at(data, "info.a[0][1].c"));      // 输出：2
-System.out.println("f的值：" + JacksonUtil.at(data, "info.a[1][2].f"));      // 输出：5
-System.out.println("f所在对象：" + JacksonUtil.at(data, "info.a[1][2]"));    // 输出：{"f":5}
-System.out.println("f所在对象：" + JacksonUtil.at(data, "info.a[1][-1]"));   // 输出：{"f":5}
+// 😎 一行代码，自动判空，自动强转，支持数组下标
+String tag = new JSONMap(data).getStr("user.profile.tags[0]");
 ```
-
-## 工具模块文档
-
-- [对象转换工具 - ValUtil](docs/valutil.md)
-- [JSON处理工具 - JacksonUtil](docs/jacksonutil.md)
-- [JSONMap/JSONList - JSON数据结构](docs/jsonmap-jsonlist.md)
-- [字符串处理工具 - StringUtils](docs/stringutils.md)
-- [日期处理工具 - DateUtil](docs/dateutil.md)
-- [文件处理工具 - FileUtil](docs/fileutil.md)
-- [XML处理工具 - XmlUtil](docs/xmlutil.md)
-- [加密工具 - EncryptUtil](docs/encryptutil.md)
-- [缓存工具 - Cache](docs/cache.md)
-- [异常处理 - Exceptions](docs/exceptions.md)
-- [常量定义 - Constants](docs/constants.md)
-- [反射工具 - Reflections](docs/reflections.md)
-- [树结构工具 - TreeUtil](docs/treeutil.md)
-- [HTTP工具 - HttpUtil](docs/httputil.md)
-
-## 快速开始
-
-### Maven 依赖
-
-```xml
-<dependency>
-    <groupId>com.chan3d</groupId>
-    <artifactId>dlz.comm</artifactId>
-    <version>6.3.3</version>
-</dependency>
-```
-
-### 基本使用示例
-
+---
+## 🛠️ 独创三大“神兵利器”
+JSONMap 将复杂操作封装为三个核心能力，直击 Java 开发痛点。
+### 1. 🎯 穿云箭：深层路径直达 (Deep Path Access)
+**独创亮点**：无需任何中间对象，直接通过**点号**和**下标**穿透任意层级。
+*   **智能判空**：路径中任意一环为 null，直接返回 null，绝无 NPE。
+*   **支持负索引**：`tags[-1]` 直接获取数组倒数第一个元素（Python 风格）。
+*   **混合解析**：完美处理 `Map` 中嵌套 `List`，`List` 中嵌套 `Map` 的复杂场景。
 ```java
-// 类型转换示例
-String strValue = "123";
-int intValue = ValUtil.toInt(strValue);  // 转换为整数
-
-// JSON处理示例
-String jsonStr = "{\"name\":\"John\", \"age\":30}";
-JSONMap jsonMap = new JSONMap(jsonStr);
-String name = jsonMap.getStr("name");  // 获取name字段
-
-// 日期处理示例
-Date now = DateUtil.now();  // 获取当前时间
-String dateStr = DateUtil.getDateStr(now);  // 格式化为字符串
+// 获取倒数第二个历史记录的时间戳
+Long time = map.getLong("history.logs[-2].timestamp"); 
 ```
-
-## 特性
-
-- **轻量级**：专注于提供核心工具功能
-- **高性能**：优化过的算法和数据结构
-- **易用性**：提供简洁的API和链式调用
-- **类型安全**：充分使用泛型确保类型安全
-- **可扩展**：支持自定义实现和扩展
-
-## 许可证
-
-MIT License
+### 2. 🏗️ 这里的“独创”：意念构建 (Hierarchical Construction)
+**独创亮点**：想构造 `{"a":{"b":{"c":1}}}`？别再 new 三个 HashMap 了！
+*   **自动铺路**：只要你给路径，中间缺 Map 补 Map，缺 List 补 List。
+*   **智能合并**：路径已存在？自动识别是“覆盖”还是“合并”。
+```java
+// ✨ 魔法般的构建过程
+JSONMap config = new JSONMap()
+    .set("server.port", 8080)             // 自动创建 server 对象
+    .set("db.master.ip", "192.168.1.1")   // 自动创建 db 和 master 对象
+    .add("users[0].name", "admin");       // 自动创建 users 数组
+```
+### 3. 🧬 变形金刚：全能类型转换 (Universal Type Casting)
+**独创亮点**：源数据是什么类型不重要，重要的是**你想要什么类型**。
+*   **容错性极强**：数据库存的是 String "100"，代码想要 int 100？自动转。
+*   **对象映射**：想把某个子节点直接转成 Java Bean？一键搞定。
+```java
+// 源数据：{"score": "99.5", "info": {...}}
+BigDecimal score = map.getBigDecimal("score"); // 自动解析字符串为数字
+User user = map.getAs("info", User.class);     // 子节点直接转对象
+```
+---
+## 🚀 为什么选择 JSONMap？
+| 特性 | 原生 Map | Jackson JsonNode | **JSONMap** |
+| :--- | :---: | :---: | :---: |
+| **深层读取** | ❌ 极度繁琐 | ⚠️ 链式 get() | ✅ **字符串路径直达** |
+| **类型转换** | ❌ 手动强转 | ⚠️ 需要 .asInt() | ✅ **自动适配** |
+| **构建结构** | ❌ 疯狂 put | ⚠️ ObjectNode | ✅ **路径 set** |
+| **空指针安全** | ❌ 需手动判断 | ✅ Safe | ✅ **Safe** |
+| **学习成本** | 低 | 中 | **零 (看一眼就会)** |
+---
+## 📚 快速开始
+```java
+// 1. 包装任意对象
+JSONMap jm = new JSONMap(userMap); 
+// 2. 享受开发
+jm.set("meta.version", "1.0");
+System.out.println("Version: " + jm.getStr("meta.version"));
+```
+> **JSONMap** —— 让 Java 的 JSON 处理不再是体力活。

@@ -3,6 +3,7 @@ package com.dlz.comm.util;
 import com.dlz.comm.exception.SystemException;
 import lombok.extern.slf4j.Slf4j;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -187,6 +188,8 @@ public class DateUtil {
         try {
             return UTC.parse(dateVal);
         } catch (Exception e) {
+            log.error("parseUTCDate error! input:{}", dateVal);
+            log.error(ExceptionUtils.getStackTrace(e));
             return null;
         }
     }
@@ -368,13 +371,16 @@ public class DateUtil {
      */
     public static LocalDateTime parseUTCLocalDateTime(String utcTimeStr) {
         try {
+            if(utcTimeStr==null){
+                return null;
+            }
             // 将字符串解析为 Instant（UTC 时间）
             Instant instant = Instant.from(DateTimeFormatter.ISO_INSTANT.parse(utcTimeStr));
             // 转换为系统默认时区的 LocalDateTime
             return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
         } catch (DateTimeParseException e) {
-            // 可选：记录日志
-            log.error(ExceptionUtils.getStackTrace(new SystemException("无法解析 UTC 时间字符串: " + utcTimeStr, e)));
+            log.warn("parseUTCLocalDateTime error! input:{} ", utcTimeStr);
+            log.error(ExceptionUtils.getStackTrace(e));
             return null;
         }
     }

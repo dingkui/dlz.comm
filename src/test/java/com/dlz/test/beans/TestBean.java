@@ -1,4 +1,4 @@
-package com.dlz.test.comm.json;
+package com.dlz.test.beans;
 
 import lombok.Getter;
 import lombok.Setter;

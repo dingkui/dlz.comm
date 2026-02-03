@@ -24,93 +24,95 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 @Slf4j
 public class DateFormat {
-	public final String pattern;
-	private final Locale locale;
-	private final TimeZone timezone;
-	private final Queue<SimpleDateFormat> queue = new ConcurrentLinkedQueue<>();
-	public final DateTimeFormatter formatter;
-	private DateFormat(String pattern, Locale locale, TimeZone timezone) {
-		this.pattern = pattern;
-		this.locale = locale;
-		this.timezone = timezone;
-		this.formatter = DateTimeFormatter.ofPattern(pattern);
-		SimpleDateFormat initial = createInstance();
-		queue.add(initial);
-	}
+    public final String pattern;
+    private final Locale locale;
+    private final TimeZone timezone;
+    private final Queue<SimpleDateFormat> queue = new ConcurrentLinkedQueue<>();
+    public final DateTimeFormatter formatter;
+    private DateFormat(String pattern, Locale locale, TimeZone timezone) {
+        this.pattern = pattern;
+        this.locale = locale;
+        this.timezone = timezone;
+        this.formatter = DateTimeFormatter.ofPattern(pattern);
+        SimpleDateFormat initial = createInstance();
+        queue.add(initial);
+    }
 
-	public static DateFormat of(String pattern) {
-		return new DateFormat(pattern, Locale.getDefault(), TimeZone.getDefault());
-	}
+    public static DateFormat of(String pattern) {
+        return new DateFormat(pattern, Locale.getDefault(), TimeZone.getDefault());
+    }
 
-	public static DateFormat of(String pattern, TimeZone timezone) {
-		return new DateFormat(pattern, Locale.getDefault(), timezone);
-	}
+    public static DateFormat of(String pattern, TimeZone timezone) {
+        return new DateFormat(pattern, Locale.getDefault(), timezone);
+    }
 
-	public static DateFormat of(String pattern, Locale locale, TimeZone timezone) {
-		return new DateFormat(pattern, locale, timezone);
-	}
+    public static DateFormat of(String pattern, Locale locale, TimeZone timezone) {
+        return new DateFormat(pattern, locale, timezone);
+    }
 
-	public String format(Date date) {
-		SimpleDateFormat sdf = queue.poll();
-		if (sdf == null) {
-			sdf = createInstance();
-		}
-		String result = sdf.format(date);
-		queue.add(sdf);
-		return result;
-	}
+    public String format(Date date) {
+        SimpleDateFormat sdf = queue.poll();
+        if (sdf == null) {
+            sdf = createInstance();
+        }
+        String result = sdf.format(date);
+        queue.add(sdf);
+        return result;
+    }
 
-	/**
-	 * 格式化日期
-	 *
-	 * @param date
-	 * @return String
-	 */
-	public String format(TemporalAccessor date) {
-		if (date == null) {
-			return "";
-		}
-		return formatter.format(date);
-	}
-	public LocalDateTime parse2LocalDate(String dateStr) {
-		try {
-			return LocalDateTime.parse(dateStr, formatter);
-		} catch (Exception e) {
-			log.error(ExceptionUtils.getStackTrace(e));
-			return null;
-		}
-	}
+    /**
+     * 格式化日期
+     *
+     * @param date
+     * @return String
+     */
+    public String format(TemporalAccessor date) {
+        if (date == null) {
+            return "";
+        }
+        return formatter.format(date);
+    }
+    public LocalDateTime parse2LocalDate(String dateStr) {
+        try {
+            return LocalDateTime.parse(dateStr, formatter);
+        } catch (Exception e) {
+            log.warn("parse2LocalDate错误:"+pattern+" "+dateStr);
+//			log.error(ExceptionUtils.getStackTrace(e));
+            return null;
+        }
+    }
 
-	public Date parse(String source){
-		try {
-			SimpleDateFormat sdf = queue.poll();
-			if (sdf == null) {
-				sdf = createInstance();
-			}
-			Date result = sdf.parse(source);
-			queue.add(sdf);
-			return result;
-		} catch (ParseException e) {
-			log.error(ExceptionUtils.getStackTrace(e));
-			return null;
-		}
-	}
+    public Date parse(String source){
+        SimpleDateFormat sdf = queue.poll();
+        try {
+            if (sdf == null) {
+                sdf = createInstance();
+            }
+            Date result = sdf.parse(source);
+            queue.add(sdf);
+            return result;
+        } catch (ParseException e) {
+            log.error("Parse string to date error! input:{} pattern:{}", source, sdf.toPattern());
+            log.error(ExceptionUtils.getStackTrace(e));
+            return null;
+        }
+    }
 
-	private SimpleDateFormat createInstance() {
-		SimpleDateFormat sdf = new SimpleDateFormat(pattern, locale);
-		sdf.setTimeZone(timezone);
-		return sdf;
-	}
+    private SimpleDateFormat createInstance() {
+        SimpleDateFormat sdf = new SimpleDateFormat(pattern, locale);
+        sdf.setTimeZone(timezone);
+        return sdf;
+    }
 
-	public String formatNow() {
-		return format(LocalDateTime.now());
-	}
+    public String formatNow() {
+        return format(LocalDateTime.now());
+    }
 
-	/**
-	 * 格式化日期
-	 * @return  String
-	 */
-	public String toString() {
-		return pattern;
-	}
+    /**
+     * 格式化日期
+     * @return  String
+     */
+    public String toString() {
+        return pattern;
+    }
 }

@@ -1,7 +1,8 @@
-package com.dlz.comm.util.jackson;
+package com.dlz.comm.json.jackson;
 
 import com.dlz.comm.util.DateUtil;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -26,17 +27,17 @@ public class DlzJavaTimeModule extends SimpleModule {
 	private DlzJavaTimeModule() {
 		super();
 		// 添加LocalDateTime的反序列化器和序列化器
-		this.addDeserializer(LocalDateTime.class, new CustomTimeDeserializer(LocalDateTime.class,DateUtil.DATETIME.formatter));
+		this.addDeserializer(LocalDateTime.class, new CustomTimeDeserializer<>(LocalDateTime.class, DateUtil.DATETIME.formatter));
 		// 添加LocalDate的反序列化器和序列化器
-		this.addDeserializer(LocalDate.class, new CustomTimeDeserializer(LocalDate.class,DateUtil.DATE.formatter));
+		this.addDeserializer(LocalDate.class, new CustomTimeDeserializer<>(LocalDate.class, DateUtil.DATE.formatter));
 		// 添加LocalTime的反序列化器和序列化器
-		this.addDeserializer(LocalTime.class, new CustomTimeDeserializer(LocalTime.class,DateUtil.TIME.formatter));
+		this.addDeserializer(LocalTime.class, new CustomTimeDeserializer<>(LocalTime.class, DateUtil.TIME.formatter));
 		// 添加LocalDateTime的序列化器
-		this.addSerializer(LocalDateTime.class, new CustomTimeSerializer(LocalDateTime.class,DateUtil.DATETIME.formatter));
+		this.addSerializer(LocalDateTime.class, new CustomTimeSerializer<>(LocalDateTime.class, DateUtil.DATETIME.formatter));
 		// 添加LocalDate的序列化器
-		this.addSerializer(LocalDate.class, new CustomTimeSerializer(LocalDate.class,DateUtil.DATE.formatter));
+		this.addSerializer(LocalDate.class, new CustomTimeSerializer<>(LocalDate.class, DateUtil.DATE.formatter));
 		// 添加LocalTime的序列化器
-		this.addSerializer(LocalTime.class, new CustomTimeSerializer(LocalTime.class,DateUtil.TIME.formatter));
+		this.addSerializer(LocalTime.class, new CustomTimeSerializer<>(LocalTime.class, DateUtil.TIME.formatter));
 	}
 
 }

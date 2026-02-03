@@ -9,7 +9,7 @@ import java.util.Map;
  * 2013 2013-9-13 下午4:54:15
  */
 @Data
-public class TestB extends TestA{
+public class TestB extends TestA {
 	private String b1;
 	private List<Map> b;
 }
