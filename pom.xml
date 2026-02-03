@@ -3,19 +3,20 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>top.dlzio</groupId>
     <artifactId>dlz.comm</artifactId>
-    <version>1.0.1</version>
+    <version>6.5.0</version>
     <packaging>jar</packaging>
     <name>dlz.comm</name>
     <description>像JavaScript一样在Java中“丝滑”操作JSON</description>
     <url>https://github.com/dingkui/dlz.comm.git</url>
     <properties>
-        <jackson.version>2.13.4</jackson.version>
+        <jackson.version>2.13.4.2</jackson.version>
 
         <slf4j.version>1.7.32</slf4j.version>
         <lombok.version>1.18.30</lombok.version>
 
         <commons-logging.version>1.2</commons-logging.version>
         <junit.version>4.13.2</junit.version>
+        <jupiter.version>5.8.1</jupiter.version>
         <logback.version>1.2.3</logback.version>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
@@ -26,7 +27,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.13.4.2</version>
+            <version>${jackson.version}</version>
         </dependency>
         <!-- logs -->
         <dependency>
@@ -49,6 +50,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
             <version>${commons-logging.version}</version>
@@ -58,12 +65,6 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.8.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
