@@ -5,7 +5,9 @@
     <artifactId>dlz.comm</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
-    <url>https://github.com/dingkui/dlz.comm</url>
+    <name>dlz.comm</name>
+    <description>像JavaScript一样在Java中“丝滑”操作JSON</description>
+    <url>https://github.com/dingkui/dlz.comm.git</url>
     <properties>
         <jackson.version>2.13.4</jackson.version>
 
@@ -24,7 +26,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>${jackson.version}</version>
+            <version>2.13.4.2</version>
         </dependency>
         <!-- logs -->
         <dependency>
@@ -65,6 +67,24 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    <licenses>
+        <license>
+            <name>Apache License 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+    <scm>
+        <url>https://github.com/dingkui/dlz.comm</url>
+        <connection>scm:git:https://github.com/dingkui/dlz.comm.git</connection>
+        <developerConnection>scm:git:https://github.com/dingkui/dlz.comm.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>dk1983</id>
+            <name>dingkui</name>
+            <email>59461202@qq.com</email>
+        </developer>
+    </developers>
     <build>
         <plugins>
             <plugin>
@@ -82,4 +102,71 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>central-publish</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- 必须：生成 javadoc 包 -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>3.6.0</version>
+                        <configuration>
+                            <source>8</source>
+                            <additionalJOptions>
+                                <additionalJOption>-Xdoclint:none</additionalJOption>
+                            </additionalJOptions>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.4</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
