@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>top.dlzio</groupId>
     <artifactId>dlz.comm</artifactId>
-    <version>6.5.0</version>
+    <version>6.5.1</version>
     <packaging>jar</packaging>
     <name>dlz.comm</name>
     <description>像JavaScript一样在Java中“丝滑”操作JSON</description>

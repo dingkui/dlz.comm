@@ -10,10 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -213,7 +210,7 @@ class JSONMapTest {
             jsonMap.put("user1", new JSONMap("name", "用户1"));
             jsonMap.put("user2", new JSONMap("name", "用户2"));
 
-            Map<String, JSONMap> resultMap = jsonMap.asMap();
+            Map<String, JSONMap> resultMap = jsonMap.asMap(JSONMap.class);
             assertEquals("用户1", resultMap.get("user1").getStr("name"));
             assertEquals("用户2", resultMap.get("user2").getStr("name"));
         }
@@ -222,10 +219,10 @@ class JSONMapTest {
         @DisplayName("asMapList方法测试")
         void testAsMapList() {
             JSONMap jsonMap = new JSONMap();
-            jsonMap.put("list1", Arrays.asList(new JSONMap("item", "项目1")));
-            jsonMap.put("list2", Arrays.asList(new JSONMap("item", "项目2")));
+            jsonMap.put("list1", Collections.singletonList(new JSONMap("item", "项目1")));
+            jsonMap.put("list2", Collections.singletonList(new JSONMap("item", "项目2")));
 
-            Map<String, JSONList> resultMap = jsonMap.asMapList();
+            Map<String, JSONList> resultMap = jsonMap.asMap(JSONList.class);
             assertEquals(1, resultMap.get("list1").size());
             assertEquals("项目1", resultMap.get("list1").getMap(0).getStr("item"));
         }

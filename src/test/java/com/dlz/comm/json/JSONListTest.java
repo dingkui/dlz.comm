@@ -235,10 +235,10 @@ class JSONListTest {
             jsonList.add(new JSONMap("name", "用户1"));
             jsonList.add("{\"name\":\"用户2\"}");
 
-            JSONMap map1 = jsonList.getObj(0);
+            JSONMap map1 = jsonList.getMap(0);
             assertEquals("用户1", map1.getStr("name"));
 
-            JSONMap map2 = jsonList.getObj(1);
+            JSONMap map2 = jsonList.getMap(1);
             assertEquals("用户2", map2.getStr("name"));
         }
     }

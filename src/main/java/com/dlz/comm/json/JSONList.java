@@ -5,6 +5,7 @@ import com.dlz.comm.util.ValUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -122,7 +123,7 @@ public class JSONList extends ArrayList<Object> implements IUniversalVals, IUniv
      * @param objectClass 目标类型
      * @param <T> 目标类型泛型
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes" })
     public <T> JSONList(Object obj, Class<T> objectClass) {
         super();
         if(obj == null) {
@@ -130,10 +131,8 @@ public class JSONList extends ArrayList<Object> implements IUniversalVals, IUniv
         }
         if(obj instanceof Collection) {
             if(objectClass != null) {
-                final Iterator input2 = ((Collection) obj).iterator();
-                while(input2.hasNext()) {
-                    final Object next = input2.next();
-                    if(objectClass.isAssignableFrom(next.getClass())) {
+                for (Object next : (Collection) obj) {
+                    if (objectClass.isAssignableFrom(next.getClass())) {
                         add(next);
                     } else {
                         add(ValUtil.toObj(next, objectClass));
@@ -145,11 +144,11 @@ public class JSONList extends ArrayList<Object> implements IUniversalVals, IUniv
         } else if(obj instanceof Object[]) {
             if(objectClass != null) {
                 final Object[] input2 = (Object[]) obj;
-                for (int i = 0; i < input2.length; i++) {
-                    if(objectClass.isAssignableFrom(input2[i].getClass())) {
-                        add(input2[i]);
+                for (Object o : input2) {
+                    if (objectClass.isAssignableFrom(o.getClass())) {
+                        add(o);
                     } else {
-                        add(ValUtil.toObj(input2[i], objectClass));
+                        add(ValUtil.toObj(o, objectClass));
                     }
                 }
             } else {
@@ -267,26 +266,17 @@ public class JSONList extends ArrayList<Object> implements IUniversalVals, IUniv
         if(o instanceof JSONMap) {
             return (JSONMap) o;
         }
-        if(o instanceof Number) {
+        if(o instanceof Number || o instanceof Boolean || o instanceof Date || o instanceof TemporalAccessor) {
             throw new RuntimeException("对象是简单类型【" + o.getClass().getName() + "】，不能转换为JSONMap");
         }
         if(o instanceof CharSequence) {
-            if(((CharSequence) o).charAt(0) == '{') {
-                return JacksonUtil.readValue(o.toString());
+            String str = o.toString();
+            if(JacksonUtil.isJsonObj(str)) {
+                return new JSONMap(o);
             }
             throw new RuntimeException("对象是简单类型【" + o.getClass().getName() + "】，不能转换为JSONMap");
         }
         return new JSONMap(o);
-    }
-
-    /**
-     * 获取指定索引处的对象
-     *
-     * @param index 索引
-     * @return JSONMap对象
-     */
-    public JSONMap getObj(int index) {
-        return getObj(index, JSONMap.class);
     }
 
     /**

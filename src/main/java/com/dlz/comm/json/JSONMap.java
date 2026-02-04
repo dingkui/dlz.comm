@@ -108,26 +108,9 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
      */
     public <T> Map<String, T> asMap(Class<T> objectClass) {
         this.forEach((key, value) -> this.put(key, ValUtil.toObj(value, objectClass)));
-        return (Map<String, T>) this;
+        return (Map<String, T> ) this;
     }
 
-    /**
-     * 将JSONMap转换为JSONMap类型的Map
-     *
-     * @return JSONMap类型的Map
-     */
-    public Map<String, JSONMap> asMap() {
-        return asMap(JSONMap.class);
-    }
-
-    /**
-     * 将JSONMap转换为JSONList类型的Map
-     *
-     * @return JSONList类型的Map
-     */
-    public Map<String, JSONList> asMapList() {
-        return asMap(JSONList.class);
-    }
 
     /**
      * 清除空属性 null，""
