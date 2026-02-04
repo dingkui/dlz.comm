@@ -500,6 +500,56 @@ public class JacksonUtil {
 //        System.out.println(javaType1.getBindings().size());
 //    }
 
+
+    /**
+     * 将key进行拆分  如：
+     *  a.b[1].c  -> a, b[1].c
+     *  b[0][2].c  -> b[0][2],c
+     *  [2].c  -> [2], c
+     *  c  -> c, null
+     * @param key
+     * @return
+     */
+    public static VAL<String, String> splitKey(String key) {
+        if(StringUtils.isEmpty(key) || key.equals(".")) {
+            throw new SystemException("key无效：" + key);
+        }
+
+        int dotIndex = key.indexOf(".");
+        int rightBracketIndex = key.indexOf("]");
+
+        // 情况1: 以 [ 开头，如 [2].c -> [2], c
+        if(key.startsWith("[")) {
+            if(rightBracketIndex == -1) {
+                throw new SystemException("数组下标格式错误，缺少右括号: " + key);
+            }
+            // 找到 ] 后面的内容
+            String remaining = rightBracketIndex + 1 < key.length() ? key.substring(rightBracketIndex + 1) : "";
+            if(remaining.startsWith(".")) {
+                remaining = remaining.substring(1);
+            }
+            return VAL.of(key.substring(0, rightBracketIndex + 1), remaining.isEmpty() ? null : remaining);
+        }
+
+        // 情况2: 有点分隔
+        if(dotIndex > -1) {
+            // 如果有右括号且在点之前，说明是 b[0][2].c 这种形式
+            // 需要找到最后一个 ] 后面的点
+            if(rightBracketIndex > -1 && rightBracketIndex < dotIndex) {
+                // 找到 ] 后面第一个点的位置
+                int dotAfterBracket = key.indexOf(".", rightBracketIndex);
+                if(dotAfterBracket > -1) {
+                    return VAL.of(key.substring(0, dotAfterBracket), key.substring(dotAfterBracket + 1));
+                }
+            }
+            // 普通点分隔，如 a.b.c
+            return VAL.of(key.substring(0, dotIndex), key.substring(dotIndex + 1));
+        }
+
+        // 情况3: 没有点也没有括号，返回整个key，如 c -> c, null
+        return VAL.of(key, null);
+    }
+
     /**
      * 从对象中按路径提取指定值
      *

@@ -3,6 +3,7 @@ package com.dlz.comm.json;
 import com.dlz.comm.exception.SystemException;
 import com.dlz.comm.util.JacksonUtil;
 import com.dlz.comm.util.StringUtils;
+import com.dlz.comm.util.VAL;
 import com.dlz.comm.util.ValUtil;
 
 import java.util.*;
@@ -148,60 +149,217 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
 
     /**
      * 按层次设定值，设定的对象需要是JSONMap对象
-     * 采用合并方式
      *
      * @param key 层次键，如：a.b.c.d
      * @param value 要设定的值
-     * @return 当前实例
-     */
-    public JSONMap set(String key, Object value) {
-        return set(key, value, 1);
-    }
-
-    /**
-     * 按层次设定值，设定的对象需要是JSONMap对象
-     *
-     * @param key 层次键，如：a.b.c.d
-     * @param value 要设定的值
-     * @param joinMethod 合并方式
      * 		0: 替换
      * 		1: 合并
      * @return 当前实例
      */
-    public JSONMap set(String key, Object value, int joinMethod) {
+    private Object genKeys(String key, JSONMap value) {
         if(value == null) {
             return this;
         }
-        int i = key.indexOf(".");
-        if(i > -1) {
-            String key0 = key.substring(0, i);
-            String key1 = key.substring(i + 1);
-            Object o = this.get(key0);
-            if(o == null) {
-                o = new JSONMap();
-                put(key0, o);
-            }
-            if(!(o instanceof JSONMap)) {
-                throw new SystemException("不支持的设定信息:" + o.getClass() + key.substring(i));
-            }
-            this.put(key0, ((JSONMap) o).set(key1, value));
-        } else {
-            Object o = this.get(key);
-            if(o instanceof JSONMap) {
-                if(!Map.class.isAssignableFrom(value.getClass())) {
-                    throw new SystemException("设定类型不一致:" + value.getClass() + "→" + o.getClass());
-                } else {
-                    if(joinMethod == 0) {
-                        put(key, value);
-                    } else {
-                        ((JSONMap) o).putAll((Map) value);
-                    }
-                }
+
+        return this;
+    }
+
+    /**
+     * 按层次设定值，设定的对象需要是JSONMap对象,如果对应的父值不存在则自动创建
+     *
+     * @param key 多级键，
+     *   如：a.b.c.d
+     *       a[0][1].c.d
+     *       a[0].b[1].d
+     *       a.b[1].c  
+     * @param value 要设定的值
+     * @return 当前实例
+     */
+    public JSONMap set(String key, Object value) {
+        if(StringUtils.isEmpty(key)) {
+            throw new SystemException("key不能为空");
+        }
+        
+        // 使用 splitKey1 拆分键
+        VAL<String, String> keys = JacksonUtil.splitKey(key);
+        String currentKey = keys.v1;
+        String remainingKey = keys.v2;
+        
+        // 判断当前键是否包含数组索引
+        int bracketIndex = currentKey.indexOf("[");
+        
+        if(bracketIndex == -1) {
+            // 情况1: 普通键，如 a 或 user
+            if(remainingKey == null) {
+                // 已经是最后一级，直接设置值
+                put(currentKey, value);
             } else {
-                put(key, value);
+                // 还有下一级，需要获取或创建 JSONMap
+                Object existing = get(currentKey);
+                JSONMap childMap;
+                
+                if(existing == null) {
+                    childMap = new JSONMap();
+                    put(currentKey, childMap);
+                } else if(existing instanceof JSONMap) {
+                    childMap = (JSONMap) existing;
+                } else {
+                    throw new SystemException("键 '" + currentKey + "' 的值类型不匹配，期望 JSONMap，实际为 " + existing.getClass().getSimpleName());
+                }
+                
+                childMap.set(remainingKey, value);
+            }
+        } else {
+            // 情况2: 包含数组索引，如 a[0] 或 [0]
+            handleArrayKey(currentKey, remainingKey, value);
+        }
+        
+        return this;
+    }
+    
+    /**
+     * 处理包含数组索引的键
+     * 
+     * @param currentKey 当前键，如 a[0][1] 或 [0]
+     * @param remainingKey 剩余键
+     * @param value 要设置的值
+     */
+    private void handleArrayKey(String currentKey, String remainingKey, Object value) {
+        // 解析数组键，如 a[0][1] -> arrayName=a, indices=[0,1]
+        String arrayName;
+        List<Integer> indices = new ArrayList<>();
+        
+        if(currentKey.startsWith("[")) {
+            // 以 [ 开头，如 [0] 或 [0][1]
+            arrayName = "";
+            parseArrayIndices(currentKey, 0, indices);
+        } else {
+            // 普通形式，如 a[0] 或 a[0][1]
+            int firstBracket = currentKey.indexOf("[");
+            arrayName = currentKey.substring(0, firstBracket);
+            parseArrayIndices(currentKey, firstBracket, indices);
+        }
+        
+        // 获取或创建数组
+        Object existing = arrayName.isEmpty() ? null : get(arrayName);
+        JSONList list;
+        
+        if(existing == null) {
+            list = new JSONList();
+            if(!arrayName.isEmpty()) {
+                put(arrayName, list);
+            }
+        } else if(existing instanceof JSONList) {
+            list = (JSONList) existing;
+        } else if(existing instanceof List) {
+            list = new JSONList((List<?>) existing);
+            if(!arrayName.isEmpty()) {
+                put(arrayName, list);
+            }
+        } else {
+            throw new SystemException("键 '" + arrayName + "' 的值类型不匹配，期望 JSONList，实际为 " + existing.getClass().getSimpleName());
+        }
+        
+        // 递归处理多维数组索引
+        setArrayValue(list, indices, 0, remainingKey, value);
+    }
+    
+    /**
+     * 解析数组索引，如 [0][1][2] -> [0, 1, 2]
+     * 
+     * @param key 包含数组索引的键
+     * @param startPos 开始位置
+     * @param indices 输出的索引列表
+     */
+    private void parseArrayIndices(String key, int startPos, List<Integer> indices) {
+        int pos = startPos;
+        while(pos < key.length() && key.charAt(pos) == '[') {
+            int rightBracket = key.indexOf(']', pos);
+            if(rightBracket == -1) {
+                throw new SystemException("数组下标格式错误，缺少右括号: " + key);
+            }
+            
+            String indexStr = key.substring(pos + 1, rightBracket);
+            if(indexStr.isEmpty()) {
+                throw new SystemException("数组下标不能为空: " + key);
+            }
+            
+            try {
+                int index = Integer.parseInt(indexStr);
+                indices.add(index);
+            } catch(NumberFormatException e) {
+                throw new SystemException("数组下标必须是整数: " + indexStr);
+            }
+            
+            pos = rightBracket + 1;
+        }
+    }
+    
+    /**
+     * 递归设置数组值
+     * 
+     * @param list 当前数组
+     * @param indices 索引列表
+     * @param currentLevel 当前处理的索引层级
+     * @param remainingKey 剩余键
+     * @param value 要设置的值
+     */
+    private void setArrayValue(JSONList list, List<Integer> indices, int currentLevel, String remainingKey, Object value) {
+        int index = indices.get(currentLevel);
+        
+        // 处理负数索引
+        if(index < 0) {
+            index = list.size() + index;
+            if(index < 0) {
+                index = 0;
             }
         }
-        return this;
+        
+        // 扩展数组大小
+        while(list.size() <= index) {
+            list.add(null);
+        }
+        
+        if(currentLevel == indices.size() - 1) {
+            // 最后一个索引
+            if(remainingKey == null) {
+                // 没有剩余键，直接设置值
+                list.set(index, value);
+            } else {
+                // 还有剩余键，需要获取或创建 JSONMap
+                Object existing = list.get(index);
+                JSONMap childMap;
+                
+                if(existing == null) {
+                    childMap = new JSONMap();
+                    list.set(index, childMap);
+                } else if(existing instanceof JSONMap) {
+                    childMap = (JSONMap) existing;
+                } else {
+                    throw new SystemException("数组索引 [" + index + "] 的值类型不匹配，期望 JSONMap，实际为 " + existing.getClass().getSimpleName());
+                }
+                
+                childMap.set(remainingKey, value);
+            }
+        } else {
+            // 还有更多索引，需要获取或创建嵌套数组
+            Object existing = list.get(index);
+            JSONList childList;
+            
+            if(existing == null) {
+                childList = new JSONList();
+                list.set(index, childList);
+            } else if(existing instanceof JSONList) {
+                childList = (JSONList) existing;
+            } else if(existing instanceof List) {
+                childList = new JSONList((List<?>) existing);
+                list.set(index, childList);
+            } else {
+                throw new SystemException("数组索引 [" + index + "] 的值类型不匹配，期望 JSONList，实际为 " + existing.getClass().getSimpleName());
+            }
+            
+            setArrayValue(childList, indices, currentLevel + 1, remainingKey, value);
+        }
     }
 
     /**

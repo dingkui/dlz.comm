@@ -1,5 +1,6 @@
 package com.dlz.comm.util;
 
+import com.dlz.comm.exception.SystemException;
 import com.dlz.comm.json.JSONList;
 import com.dlz.comm.json.JSONMap;
 import com.fasterxml.jackson.databind.JavaType;
@@ -331,6 +332,139 @@ class JacksonUtilTest {
             assertFalse(JacksonUtil.isJsonArray("{}"));
             assertFalse(JacksonUtil.isJsonArray("{\"key\":\"value\"}"));
             assertFalse(JacksonUtil.isJsonArray("plain text"));
+        }
+    }
+
+    @Nested
+    @DisplayName("splitKey1方法测试")
+    class SplitKey1Tests {
+
+        @Test
+        @DisplayName("普通点分隔 - a.b[1].c")
+        void testSplitKey1DotSeparated() {
+            VAL<String, String> result = JacksonUtil.splitKey("a.b[1].c");
+            assertEquals("a", result.v1);
+            assertEquals("b[1].c", result.v2);
+        }
+
+        @Test
+        @DisplayName("多维数组 - b[0][2].c")
+        void testSplitKey1MultiDimensionalArray() {
+            VAL<String, String> result = JacksonUtil.splitKey("b[0][2].c");
+            assertEquals("b[0][2]", result.v1);
+            assertEquals("c", result.v2);
+        }
+
+        @Test
+        @DisplayName("以括号开头 - [2].c")
+        void testSplitKey1StartWithBracket() {
+            VAL<String, String> result = JacksonUtil.splitKey("[2].c");
+            assertEquals("[2]", result.v1);
+            assertEquals("c", result.v2);
+        }
+
+        @Test
+        @DisplayName("单个键名 - c")
+        void testSplitKey1SingleKey() {
+            VAL<String, String> result = JacksonUtil.splitKey("c");
+            assertEquals("c", result.v1);
+            assertNull(result.v2);
+        }
+
+        @Test
+        @DisplayName("简单点分隔 - user.name")
+        void testSplitKey1SimpleDot() {
+            VAL<String, String> result = JacksonUtil.splitKey("user.name");
+            assertEquals("user", result.v1);
+            assertEquals("name", result.v2);
+        }
+
+        @Test
+        @DisplayName("数组带属性 - items[3].title")
+        void testSplitKey1ArrayWithProperty() {
+            VAL<String, String> result = JacksonUtil.splitKey("items[3].title");
+            assertEquals("items[3]", result.v1);
+            assertEquals("title", result.v2);
+        }
+
+        @Test
+        @DisplayName("多级点分隔 - a.b.c.d")
+        void testSplitKey1MultipleDots() {
+            VAL<String, String> result = JacksonUtil.splitKey("a.b.c.d");
+            assertEquals("a", result.v1);
+            assertEquals("b.c.d", result.v2);
+        }
+
+        @Test
+        @DisplayName("嵌套数组带路径 - list[0][1].name")
+        void testSplitKey1NestedArrayWithPath() {
+            VAL<String, String> result = JacksonUtil.splitKey("list[0][1].name");
+            assertEquals("list[0][1]", result.v1);
+            assertEquals("name", result.v2);
+        }
+
+        @Test
+        @DisplayName("只有数组 - arr[5]")
+        void testSplitKey1ArrayOnly() {
+            VAL<String, String> result = JacksonUtil.splitKey("arr[5]");
+            assertEquals("arr[5]", result.v1);
+            assertNull(result.v2);
+        }
+
+        @Test
+        @DisplayName("以括号开头无后续 - [0]")
+        void testSplitKey1BracketOnlyStart() {
+            VAL<String, String> result = JacksonUtil.splitKey("[0]");
+            assertEquals("[0]", result.v1);
+            assertNull(result.v2);
+        }
+
+        @Test
+        @DisplayName("多维数组无后续 - data[1][2][3]")
+        void testSplitKey1MultiDimensionalArrayOnly() {
+            VAL<String, String> result = JacksonUtil.splitKey("data[1][2][3]");
+            assertEquals("data[1][2][3]", result.v1);
+            assertNull(result.v2);
+        }
+
+        @Test
+        @DisplayName("复杂路径 - a.b[0].c[1].d")
+        void testSplitKey1ComplexPath() {
+            VAL<String, String> result = JacksonUtil.splitKey("a.b[0].c[1].d");
+            assertEquals("a", result.v1);
+            assertEquals("b[0].c[1].d", result.v2);
+        }
+
+        @Test
+        @DisplayName("以括号开头带点 - [5].items[2].name")
+        void testSplitKey1BracketStartWithDot() {
+            VAL<String, String> result = JacksonUtil.splitKey("[5].items[2].name");
+            assertEquals("[5]", result.v1);
+            assertEquals("items[2].name", result.v2);
+        }
+
+        @Test
+        @DisplayName("异常情况 - 空字符串")
+        void testSplitKey1EmptyString() {
+            assertThrows(SystemException.class, () -> JacksonUtil.splitKey(""));
+        }
+
+        @Test
+        @DisplayName("异常情况 - null值")
+        void testSplitKey1Null() {
+            assertThrows(SystemException.class, () -> JacksonUtil.splitKey(null));
+        }
+
+        @Test
+        @DisplayName("异常情况 - 只有点")
+        void testSplitKey1OnlyDot() {
+            assertThrows(SystemException.class, () -> JacksonUtil.splitKey("."));
+        }
+
+        @Test
+        @DisplayName("异常情况 - 以括号开头缺少右括号")
+        void testSplitKey1StartWithBracketMissingRight() {
+            assertThrows(SystemException.class, () -> JacksonUtil.splitKey("[2.c"));
         }
     }
 }

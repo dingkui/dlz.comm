@@ -348,7 +348,7 @@ class JSONMapTest {
             jsonMap.set("data", new JSONMap("old", "旧值"));
             JSONMap newData = new JSONMap("new", "新值");
 
-            jsonMap.set("data", newData, 0); // 替换模式
+            jsonMap.set("data", newData); // 替换模式
 
             assertEquals("新值", jsonMap.getStr("data.new"));
             assertNull(jsonMap.get("data.old"));
@@ -362,7 +362,7 @@ class JSONMapTest {
             Map<String, Object> newData = new HashMap<>();
             newData.put("new", "新值");
 
-            jsonMap.set("data", newData, 1); // 合并模式
+            jsonMap.set("data", newData); // 合并模式
             assertEquals("已有值", jsonMap.getMap("data").getStr("existing"));
             assertEquals("新值", jsonMap.getMap("data").getStr("new"));
         }
@@ -377,8 +377,205 @@ class JSONMapTest {
             newData.put("key", "value");
 
             assertEquals("字符串值", jsonMap.getStr("data"));
-            jsonMap.set("data", newData, 1);
+            jsonMap.set("data", newData);
             assertEquals("value", jsonMap.getStr("data.key"));
+        }
+
+        @Test
+        @DisplayName("set方法 - 数组索引基础测试")
+        void testSetArrayBasic() {
+            JSONMap json = new JSONMap();
+            
+            // 设置数组元素
+            json.set("arr[0]", "value0");
+            json.set("arr[1]", "value1");
+            json.set("arr[2]", "value2");
+            
+            assertEquals("value0", json.getStr("arr[0]"));
+            assertEquals("value1", json.getStr("arr[1]"));
+            assertEquals("value2", json.getStr("arr[2]"));
+        }
+
+        @Test
+        @DisplayName("set方法 - 数组索引自动补齐")
+        void testSetArrayAutoFill() {
+            JSONMap json = new JSONMap();
+            
+            // 跳过索引，自动补null
+            json.set("arr[5]", "value5");
+            
+            JSONList arr = json.getList("arr");
+            assertEquals(6, arr.size());
+            assertNull(arr.get(0));
+            assertNull(arr.get(4));
+            assertEquals("value5", arr.get(5));
+        }
+
+        @Test
+        @DisplayName("set方法 - 负数索引")
+        void testSetArrayNegativeIndex() {
+            JSONMap json = new JSONMap();
+            
+            // 先设置一些元素
+            json.set("arr[0]", "value0");
+            json.set("arr[1]", "value1");
+            json.set("arr[2]", "value2");
+            
+            // 使用负数索引（倒数第一个）
+            json.set("arr[-1]", "lastValue");
+            
+            assertEquals("lastValue", json.getStr("arr[2]"));
+            assertEquals("lastValue", json.getStr("arr[-1]"));
+        }
+
+        @Test
+        @DisplayName("set方法 - 数组带属性路径")
+        void testSetArrayWithProperty() {
+            JSONMap json = new JSONMap();
+            
+            // a[0].b.c 形式
+            json.set("users[0].name", "张三");
+            json.set("users[0].age", 25);
+            json.set("users[1].name", "李四");
+            json.set("users[1].age", 30);
+            
+            assertEquals("张三", json.getStr("users[0].name"));
+            assertEquals(25, json.getInt("users[0].age"));
+            assertEquals("李四", json.getStr("users[1].name"));
+            assertEquals(30, json.getInt("users[1].age"));
+        }
+
+        @Test
+        @DisplayName("set方法 - 多维数组")
+        void testSetMultiDimensionalArray() {
+            JSONMap json = new JSONMap();
+            
+            // a[0][1] 形式
+            json.set("matrix[0][0]", 1);
+            json.set("matrix[0][1]", 2);
+            json.set("matrix[1][0]", 3);
+            json.set("matrix[1][1]", 4);
+            
+            assertEquals("{\"matrix\":[[1,2],[3,4]]}", json.toString());
+            assertEquals(1, json.getInt("matrix[0][0]"));
+            assertEquals(2, json.getInt("matrix[0][1]"));
+            assertEquals(3, json.getInt("matrix[1][0]"));
+            assertEquals(4, json.getInt("matrix[1][1]"));
+        }
+
+        @Test
+        @DisplayName("set方法 - 多维数组带属性")
+        void testSetMultiDimensionalArrayWithProperty() {
+            JSONMap json = new JSONMap();
+            
+            // a[0][1].c.d 形式
+            json.set("data[0][0].value", "A1");
+            json.set("data[0][1].value", "A2");
+            json.set("data[1][0].value", "B1");
+
+            assertEquals("{\"matrix\":[[1,2],[3,4]]}", json.toString());
+            assertEquals("A1", json.getStr("data[0][0].value"));
+            assertEquals("A2", json.getStr("data[0][1].value"));
+            assertEquals("B1", json.getStr("data[1][0].value"));
+        }
+
+        @Test
+        @DisplayName("set方法 - 以括号开头")
+        void testSetStartWithBracket() {
+            JSONMap json = new JSONMap();
+            
+            // [0].a 形式 - 这种情况下根对象本身应该是数组
+            // 但JSONMap是Map，所以这个测试可能需要特殊处理
+            // 暂时跳过或者抛出异常
+        }
+
+        @Test
+        @DisplayName("set方法 - 混合路径")
+        void testSetMixedPath() {
+            JSONMap json = new JSONMap();
+            
+            // a.b[0].c[1].d 形式
+            json.set("config.servers[0].name", "server1");
+            json.set("config.servers[0].ports[0]", 8080);
+            json.set("config.servers[0].ports[1]", 8081);
+            json.set("config.servers[1].name", "server2");
+
+            assertEquals("{\"config\":{\"servers\":[{\"name\":\"server1\",\"ports\":[8080,8081]},{\"name\":\"server2\"}]}}", json.toString());
+            assertEquals("server1", json.getStr("config.servers[0].name"));
+            assertEquals(8080, json.getInt("config.servers[0].ports[0]"));
+            assertEquals(8081, json.getInt("config.servers[0].ports[1]"));
+            assertEquals("server2", json.getStr("config.servers[1].name"));
+        }
+
+        @Test
+        @DisplayName("set方法 - 类型不匹配异常")
+        void testSetTypeConflict() {
+            JSONMap json = new JSONMap();
+            
+            // 先设置为普通值
+            json.put("data", "string value");
+            
+            // 尝试作为Map设置子属性，应该抛出异常
+            assertThrows(SystemException.class, () -> {
+                json.set("data.key", "value");
+            });
+        }
+
+        @Test
+        @DisplayName("set方法 - 数组类型不匹配异常")
+        void testSetArrayTypeConflict() {
+            JSONMap json = new JSONMap();
+            
+            // 先设置为普通值
+            json.put("data", "string value");
+            
+            // 尝试作为数组设置，应该抛出异常
+            assertThrows(SystemException.class, () -> {
+                json.set("data[0]", "value");
+            });
+        }
+
+        @Test
+        @DisplayName("set方法 - 空key异常")
+        void testSetEmptyKey() {
+            JSONMap json = new JSONMap();
+            
+            assertThrows(SystemException.class, () -> {
+                json.set("", "value");
+            });
+            
+            assertThrows(SystemException.class, () -> {
+                json.set(null, "value");
+            });
+        }
+
+        @Test
+        @DisplayName("set方法 - 复杂场景综合测试")
+        void testSetComplexScenario() {
+            JSONMap json = new JSONMap();
+            
+            // 构建复杂的嵌套结构
+            json.set("app.name", "MyApp");
+            json.set("app.version", "1.0.0");
+            json.set("app.servers[0].host", "192.168.1.1");
+            json.set("app.servers[0].port", 8080);
+            json.set("app.servers[0].tags[0]", "production");
+            json.set("app.servers[0].tags[1]", "primary");
+            json.set("app.servers[1].host", "192.168.1.2");
+            json.set("app.servers[1].port", 8081);
+            json.set("app.config.timeout", 30);
+            json.set("app.config.retry", 3);
+            
+            // 验证结构
+            assertEquals("MyApp", json.getStr("app.name"));
+            assertEquals("1.0.0", json.getStr("app.version"));
+            assertEquals("192.168.1.1", json.getStr("app.servers[0].host"));
+            assertEquals(8080, json.getInt("app.servers[0].port"));
+            assertEquals("production", json.getStr("app.servers[0].tags[0]"));
+            assertEquals("primary", json.getStr("app.servers[0].tags[1]"));
+            assertEquals("192.168.1.2", json.getStr("app.servers[1].host"));
+            assertEquals(30, json.getInt("app.config.timeout"));
+            assertEquals(3, json.getInt("app.config.retry"));
         }
     }
 
