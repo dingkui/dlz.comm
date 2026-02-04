@@ -202,6 +202,9 @@ public class BeanUtil {
         List<Field> fields = FieldReflections.getFields(source.getClass());
         fields.forEach(method ->{
             String name = method.getName();
+            if(name.contains("$")){
+                return;
+            }
             Object o = getValue(source, name, true);
 
             SetValue annotation = method.getAnnotation(SetValue.class);
