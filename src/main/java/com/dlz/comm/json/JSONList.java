@@ -166,38 +166,35 @@ public class JSONList extends ArrayList<Object> implements IUniversalVals, IUniv
                 return;
             }
             if(!JacksonUtil.isJsonArray(string)) {
-                if(string.contains(",")) {
-                    if(objectClass == String.class || objectClass == null) {
-                        if(JacksonUtil.isJsonObj(string)){
-                            log.warn("参数不能转换成JSONList:" + string);
-                            return;
-                        }
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(item.trim()));
-                        return;
-                    } else if(objectClass == Integer.class) {
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toInt(item.trim())));
-                        return;
-                    } else if(objectClass == Long.class) {
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toLong(item.trim())));
-                        return;
-                    } else if(objectClass == Date.class) {
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toDate(item.trim())));
-                        return;
-                    } else if(objectClass == BigDecimal.class) {
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toBigDecimal(item.trim())));
-                        return;
-                    } else if(objectClass == Float.class) {
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toFloat(item.trim())));
-                        return;
-                    } else if(objectClass == Double.class) {
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toDouble(item.trim())));
-                        return;
-                    } else if(objectClass == Boolean.class) {
-                        Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toBoolean(item.trim())));
+                if(objectClass == String.class || objectClass == null) {
+                    if(JacksonUtil.isJsonObj(string)){
+                        adds(string);
                         return;
                     }
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(item.trim()));
+                    return;
+                } else if(objectClass == Integer.class) {
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toInt(item.trim())));
+                    return;
+                } else if(objectClass == Long.class) {
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toLong(item.trim())));
+                    return;
+                } else if(objectClass == Date.class) {
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toDate(item.trim())));
+                    return;
+                } else if(objectClass == BigDecimal.class) {
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toBigDecimal(item.trim())));
+                    return;
+                } else if(objectClass == Float.class) {
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toFloat(item.trim())));
+                    return;
+                } else if(objectClass == Double.class) {
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toDouble(item.trim())));
+                    return;
+                } else if(objectClass == Boolean.class) {
+                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toBoolean(item.trim())));
+                    return;
                 }
-                throw new RuntimeException("参数不能转换成JSONList:" + string);
             }
 
             if(objectClass != null) {
