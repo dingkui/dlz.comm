@@ -51,6 +51,15 @@ public class MemoryCache implements ICache {
             }
         }
     }
+    /**
+     * 构造函数，初始化过期处理线程
+     */
+    public MemoryCache(String cacheName) {
+        this();
+        if(cacheName != null){
+            CacheHolder.add(cacheName, this);
+        }
+    }
 
     /**
      * 获取指定名称的缓存映射
