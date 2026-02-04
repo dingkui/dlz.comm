@@ -148,23 +148,6 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
     }
 
     /**
-     * 按层次设定值，设定的对象需要是JSONMap对象
-     *
-     * @param key 层次键，如：a.b.c.d
-     * @param value 要设定的值
-     * 		0: 替换
-     * 		1: 合并
-     * @return 当前实例
-     */
-    private Object genKeys(String key, JSONMap value) {
-        if(value == null) {
-            return this;
-        }
-
-        return this;
-    }
-
-    /**
      * 按层次设定值，设定的对象需要是JSONMap对象,如果对应的父值不存在则自动创建
      *
      * @param key 多级键，
@@ -253,9 +236,7 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
             list = (JSONList) existing;
         } else if(existing instanceof List) {
             list = new JSONList((List<?>) existing);
-            if(!arrayName.isEmpty()) {
-                put(arrayName, list);
-            }
+            put(arrayName, list);
         } else {
             throw new SystemException("键 '" + arrayName + "' 的值类型不匹配，期望 JSONList，实际为 " + existing.getClass().getSimpleName());
         }
@@ -363,82 +344,16 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
     }
 
     /**
-     * 将值添加到JSONMap子值中
+     * 将值添加到JSONMap的列表中
      *
-     * @param key 设定的key
-     * @param obj 设定对象
-     * @param joinMethod 合并方式
-     * 		0: 替换原有信息
-     * 		1: 加入到原有数组中
-     * 		2: 合并到原有数组中
-     * 		3: 把原有数据跟新数据构造新数组
-     * @return 当前实例
-     */
-    public JSONMap add(String key, Object obj, int joinMethod) {
-        Object o = this.get(key);
-        if(o == null) {
-            put(key, obj);
-            return this;
-        }
-        switch(joinMethod) {
-            case 0:
-                put(key, obj);
-                break;
-            case 1:
-                if(o instanceof Collection || o instanceof Object[]) {
-                    List list = ValUtil.toList(o);
-                    list.add(obj);
-                    put(key, list);
-                }
-                break;
-            case 2:
-                List list;
-                if(o instanceof Collection || o instanceof Object[]) {
-                    list = ValUtil.toList(o);
-                } else {
-                    list = new ArrayList();
-                    list.add(o);
-                }
-                if(obj instanceof Collection || obj instanceof Object[]) {
-                    list.addAll(ValUtil.toList(obj));
-                } else {
-                    list.add(obj);
-                }
-                put(key, list);
-                break;
-        }
-        return this;
-    }
-
-    /**
-     * 将值添加到JSONMap子值中（默认合并方式）
-     *
-     * @param key 设定的key
+     * @param key 设定的key 支持多级穿透，如：a[0][1].c.d
      * @param obj 设定对象
      * @return 当前实例
      */
     public JSONMap add(String key, Object obj) {
-        return add(key, obj, 2);
-    }
-
-    /**
-     * 将值添加到JSONMap的列表中
-     *
-     * @param key 设定的key
-     * @param obj 设定对象
-     * @return 当前实例
-     */
-    public JSONMap add2List(String key, Object obj) {
-        List<Object> list = this.getList(key);
-        if(list == null) {
-            list = new ArrayList<>();
-        }
-        if(obj instanceof Collection || obj instanceof Object[]) {
-            list.addAll(ValUtil.toList(obj));
-        } else {
-            list.add(obj);
-        }
-        put(key, list);
+        List<Object> list = this.getList(key,new JSONList());
+        list.addAll(ValUtil.toList(obj));
+        set(key, list);
         return this;
     }
 

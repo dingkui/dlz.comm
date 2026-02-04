@@ -156,51 +156,58 @@ public class JSONList extends ArrayList<Object> implements IUniversalVals, IUniv
                 Collections.addAll(this, (Object[]) obj);
             }
         } else {
-            String string = null;
+            String str = null;
             if(obj instanceof CharSequence) {
-                string = obj.toString().trim();
+                str = obj.toString().trim();
             } else {
-                string = JacksonUtil.getJson(obj);
+                str = JacksonUtil.getJson(obj);
             }
-            if(string == null) {
+            if(str == null) {
                 return;
             }
-            if(!JacksonUtil.isJsonArray(string)) {
-                if(objectClass == String.class || objectClass == null) {
-                    if(JacksonUtil.isJsonObj(string)){
-                        adds(string);
+            if(!JacksonUtil.isJsonArray(str)) {
+                if(objectClass == null) {
+                    if(JacksonUtil.isJsonObj(str)|| !str.contains(",")){
+                        adds(obj);
                         return;
                     }
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(item.trim()));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(item.trim()));
+                    return;
+                } else if(objectClass == String.class) {
+                    if(JacksonUtil.isJsonObj(str)){
+                        adds(str);
+                        return;
+                    }
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(item.trim()));
                     return;
                 } else if(objectClass == Integer.class) {
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toInt(item.trim())));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(ValUtil.toInt(item.trim())));
                     return;
                 } else if(objectClass == Long.class) {
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toLong(item.trim())));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(ValUtil.toLong(item.trim())));
                     return;
                 } else if(objectClass == Date.class) {
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toDate(item.trim())));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(ValUtil.toDate(item.trim())));
                     return;
                 } else if(objectClass == BigDecimal.class) {
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toBigDecimal(item.trim())));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(ValUtil.toBigDecimal(item.trim())));
                     return;
                 } else if(objectClass == Float.class) {
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toFloat(item.trim())));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(ValUtil.toFloat(item.trim())));
                     return;
                 } else if(objectClass == Double.class) {
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toDouble(item.trim())));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(ValUtil.toDouble(item.trim())));
                     return;
                 } else if(objectClass == Boolean.class) {
-                    Arrays.stream(string.split(",")).forEach(item -> this.add(ValUtil.toBoolean(item.trim())));
+                    Arrays.stream(str.split(",")).forEach(item -> this.add(ValUtil.toBoolean(item.trim())));
                     return;
                 }
             }
 
             if(objectClass != null) {
-                this.addAll(JacksonUtil.readListValue(string, objectClass));
+                this.addAll(JacksonUtil.readListValue(str, objectClass));
             } else {
-                this.addAll(JacksonUtil.readList(string));
+                this.addAll(JacksonUtil.readList(str));
             }
         }
     }
