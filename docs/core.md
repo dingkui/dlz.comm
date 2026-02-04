@@ -1,6 +1,19 @@
 # 🧠 JSONMap 工具集：Java 数据处理的终极武器
+
 > **一句话总结**：让 Java 拥有 JavaScript 般的数据处理能力，告别强转地狱，告别空指针噩梦。
+
 [![JDK](https://img.shields.io/badge/JDK-8+-green.svg)](https://www.oracle.com/java/)
+
+---
+
+## 📚 文档导航
+
+- **快速入门**：本文档（核心概念和快速上手）
+- **功能导航**：[功能导航 - 从入门到精通](./features.md)（特色功能、实用功能、彩蛋功能完整索引）
+- **完整指南**：[JSONMap & JSONList 详细文档](./jsonmap-jsonlist.md)（所有 API 和实战场景）
+- **应用场景**：[应用场景与痛点分析](./scenarios.md) | [@SetValue 注解指南](./bean-mapping.md)
+- **工具类**：[JacksonUtil](./jacksonutil.md) | [DateUtil](./dateutil.md) | [StringUtils](./stringutils.md) | [ValUtil](./valutil.md) | [Cache](./cache.md)
+
 ---
 ## 🎬 3 秒感受降维打击
 ### 😫 曾经的噩梦
@@ -341,8 +354,51 @@ if (json.get("user") != null) {
 (Map<String, Object>) json.get("user");  // ❌
 json.getMap("user");                      // ✅
 ```
+
 ---
+
+## 📚 更多资源
+
+### 详细文档
+- [📘 JSONMap & JSONList 完整指南](./jsonmap-jsonlist.md) - 所有 API 和实战场景
+- [🔧 JacksonUtil 文档](./jacksonutil.md) - JSON 序列化与路径取值
+- [📅 DateUtil 文档](./dateutil.md) - 日期时间处理
+- [🔤 StringUtils 文档](./stringutils.md) - 字符串处理
+- [🔄 ValUtil 文档](./valutil.md) - 类型转换工具
+- [💾 Cache 文档](./cache.md) - 缓存工具
+
+### 快速链接
+- [返回首页](../README.md)
+- [GitHub 仓库](https://github.com/dlz-xyz/dlz.comm)
+- [问题反馈](https://github.com/dlz-xyz/dlz.comm/issues)
+
+---
+
+## 💡 常见问题
+
+### Q: JSONMap 和普通 HashMap 有什么区别？
+A: JSONMap 继承自 LinkedHashMap，完全兼容 Map 接口。额外提供深层路径访问、自动类型转换、链式构建等功能。
+
+### Q: 路径访问失败会抛异常吗？
+A: 不会。路径中任意一环为 null，直接返回 null，绝无 NPE。
+
+### Q: 性能怎么样？
+A: 底层就是 LinkedHashMap，性能与原生 Map 一致。路径解析有缓存优化。
+
+### Q: 支持哪些 JSON 格式？
+A: 支持标准 JSON、简化 JSON（key 不加引号）、带注释的 JSON。
+
+### Q: 可以和 Jackson/FastJSON 一起用吗？
+A: 可以。JSONMap 基于 Jackson 构建，与其他 JSON 库无冲突。
+
+### Q: 线程安全吗？
+A: JSONMap 和 JSONList 本身不是线程安全的。多线程环境下需要外部同步，或使用 `Collections.synchronizedMap()` 包装。
+
+---
+
 <div align="center">
 **简单的事情简单做，复杂的事情也能简单做。**
 如果觉得有帮助，请点个 ⭐ Star 支持一下！
+
+[返回首页](../README.md)
 </div>

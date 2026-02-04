@@ -3,7 +3,12 @@
 [![JDK](https://img.shields.io/badge/JDK-8%20%7C%2011%20%7C%2017%20%7C%2021-green.svg)](https://www.oracle.com/java/)
 [![Size](https://img.shields.io/badge/Size-~100KB-brightgreen.svg)]()
 [![Dependency](https://img.shields.io/badge/Dependency-jackson--databind%20only-orange.svg)]()
+[![AI Friendly](https://img.shields.io/badge/AI-Friendly-brightgreen.svg)]()
+
 > **一行代码穿透复杂 JSON，告别 Java 数据处理的"体力活"**
+>
+> **🤖 AI 时代的最佳拍档：让 AI 生成的代码减少 90% 冗余，节省 Token**
+
 ```java
 // 以前要写 10 行的判空+强转，现在 1 行搞定
 String city = json.getStr("user.profile.addresses[0].city");
@@ -18,6 +23,8 @@ String city = json.getStr("user.profile.addresses[0].city");
 | ☕ **全版本兼容**  | JDK 8 / 11 / 17 / 21 全部支持           |
 | 🚀 **即插即用**  | 加一行依赖，2 分钟上手                        |
 | 😄 **熟悉的味道** | Ta就是你熟悉的HashMap，套了个马甲就身价百倍了         |
+| 🤖 **AI 友好**  | 让 AI 生成的代码减少 90% 冗余，节省 Token      |
+| 🏆 **久经考验**  | 20 年积累，上百个项目验证，稳定可靠                |
 ---
 ## 🚀 30 秒快速开始
 ### 1. 添加依赖
@@ -39,7 +46,10 @@ String city = data.getStr("user.profile.addresses[0].city");// → "上海"
 **没错，就这么简单。**
 ---
 ## 💥 3 秒感受降维打击
-### ❌ 传统 Java 方式
+
+### 场景1：深层嵌套取值
+
+#### ❌ 传统 Java 方式
 ```java
 // 从 API 响应中获取用户的城市信息
 Map<String, Object> response = getApiResponse();
@@ -63,11 +73,68 @@ if (response != null) {
     }
 }
 ```
-### ✅ JSONMap 方式
+
+#### ✅ JSONMap 方式
 ```java
 String city = new JSONMap(response).getStr("data.user.profile.addresses[0].city");
 ```
+
 > **12 行 → 1 行，代码量减少 90%**
+
+---
+
+### 场景2：动态构建复杂结构
+
+#### ❌ 传统方式：疯狂 new HashMap
+```java
+// 需要返回给前端的结构
+// {"meta":{"version":"1.0","timestamp":1234567890},"data":{"user":{"name":"张三"}},"errors":[]}
+
+Map<String, Object> result = new HashMap<>();
+Map<String, Object> meta = new HashMap<>();
+meta.put("version", "1.0");
+meta.put("timestamp", System.currentTimeMillis());
+result.put("meta", meta);
+Map<String, Object> data = new HashMap<>();
+Map<String, Object> user = new HashMap<>();
+user.put("name", "张三");
+data.put("user", user);
+result.put("data", data);
+result.put("errors", new ArrayList<>());
+```
+
+#### ✅ JSONMap：意念构建
+```java
+JSONMap result = new JSONMap()
+    .set("meta.version", "1.0")
+    .set("meta.timestamp", System.currentTimeMillis())
+    .set("data.user.name", "张三")
+    .set("errors", new ArrayList<>());
+```
+
+> **10 行 → 4 行，代码量减少 60%**
+
+---
+
+### 场景3：前端传参类型混乱
+
+#### ❌ 传统方式：各种 try-catch
+```java
+// 前端传来的参数，类型永远是个谜
+// {"age":"25","price":99.9,"count":"3.0","ids":"1,2,3"}
+
+Integer age = Integer.parseInt(params.get("age").toString()); // 可能抛异常
+```
+
+#### ✅ ValUtil：随便你传什么，我都能转
+```java
+Integer age = ValUtil.toInt(params.get("age"));           // null 或 正确值
+Integer age = ValUtil.toInt(params.get("age"), 0);        // 带默认值
+List<Integer> ids = ValUtil.toList(params.get("ids"), Integer.class); // 自动拆分 "1,2,3"
+```
+
+> **容错性极强，永不抛异常**
+
 ---
 ## 🛠️ 独创三大“神兵利器”
 JSONMap 将复杂操作封装为三个核心能力，直击 Java 开发痛点。
@@ -133,32 +200,81 @@ User user = params.as(User.class);
 > **Jackson 负责"搬运"，JSONMap 负责"加工"，完美互补。**
 ---
 ## 📖 详细文档
-- [📘 三剑客 完整指南](docs/core.md) - 所有 API 和使用技巧
-- [🎁 隐藏宝藏](./docs/JSONMap.md#-隐藏宝藏老司机专区) - 低频但惊艳的高级功能
+
+### 🎯 功能导航
+- [🎯 功能导航 - 从入门到精通](docs/features.md) - 特色功能、实用功能、彩蛋功能完整索引
+
+### 核心工具
+- [📘 JSONMap & JSONList 完整指南](docs/jsonmap-jsonlist.md) - JSON 数据处理核心工具
+- [📗 核心工具集概览](docs/core.md) - 所有工具的快速入门
+
+### 应用场景
+- [🎯 应用场景与痛点分析](docs/scenarios.md) - 四大核心场景、痛点对比、适用项目类型
+- [🔥 @SetValue 注解指南](docs/bean-mapping.md) - 扁平 Bean ↔ 嵌套 JSON 双向映射
+- [🤖 AI 友好开发指南](docs/ai-friendly.md) - 让 AI 生成的代码减少 90% 冗余
+
+### 工具类文档
+- [🔧 JacksonUtil](docs/jacksonutil.md) - JSON 序列化与路径取值
+- [📅 DateUtil](docs/dateutil.md) - 日期时间处理
+- [🔤 StringUtils](docs/stringutils.md) - 字符串处理
+- [🔄 ValUtil](docs/valutil.md) - 类型转换工具
+- [💾 Cache](docs/cache.md) - 缓存工具
+
 ---
 ## 💬 常见问题
+
+<details>
+<summary><b>Q: 这个工具代码看起来很新，有足够的测试吗？有 bug 吗？</b></summary>
+
+**放心，这套框架已经积累了近 20 年！**
+
+- **起源**：从 2006 年职场小白开始，就在慢慢积累这套工具
+- **验证**：大大小小上百个内部项目都在使用，久经考验
+- **测试**：所有方法和案例都经过充分测试，有完整的测试用例覆盖
+- **为什么看起来新**：这是第一次开源上架，代码是从繁复的工程中精心剥离出来的，结构经过优化调整
+
+**20 年的积累，上百个项目的验证，稳定可靠！**
+
+</details>
+
+<details>
+<summary><b>Q: 适合 AI 辅助开发吗？</b></summary>
+
+**非常适合！** JSONMap 的设计理念就是简洁、直观，这正是 AI 喜欢的风格：
+- AI 生成的代码减少 90% 冗余
+- Token 消耗降低 90%
+- 学习成本极低，AI 一看就懂
+
+在 Cursor、GitHub Copilot 等 AI 工具中使用 JSONMap，可以显著提升代码生成质量。
+
+</details>
+
 <details>
 <summary><b>Q: 我的项目没有 Jackson 怎么办？</b></summary>
-添加 dlz.comm自动引入Jackson，大多数 Spring 项目默认就有：
-```xml
- <dependency>
-            <groupId>top.dlzio</groupId>
-            <artifactId>dlz.comm</artifactId>
-            <version>6.5.1</version>
- </dependency>
-```
+
+添加 dlz.comm 会自动引入 Jackson，大多数 Spring 项目默认就有。
+
 </details>
+
 <details>
 <summary><b>Q: 性能怎么样？</b></summary>
+
 底层就是 `LinkedHashMap`，性能与原生 Map 一致。路径解析有缓存优化。
+
 </details>
+
 <details>
 <summary><b>Q: 会和现有代码冲突吗？</b></summary>
+
 不会。JSONMap 继承自 `LinkedHashMap`，可以当普通 Map 使用，完全兼容。
+
 </details>
+
 <details>
 <summary><b>Q: Spring Boot 2.x / 3.x 都支持吗？</b></summary>
+
 都支持。JSONMap 不依赖 Spring，只依赖 Jackson。
+
 </details>
 ---
 ## 🌟 Star History

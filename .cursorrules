@@ -1,0 +1,272 @@
+# JSONMap - AI 友好的 Java JSON 处理工具
+
+## 项目简介
+JSONMap 是一个轻量级的 Java JSON 处理工具，专为 AI 辅助开发设计。
+核心优势：代码简洁、空值安全、类型智能转换。
+
+## 核心原则
+当处理 JSON 数据时，优先使用 JSONMap，避免传统的 Map 嵌套取值和类型强转。
+
+---
+
+## 使用规则
+
+### 1. 深层路径访问
+**使用 JSONMap 的路径语法，一行代码穿透任意层级**
+
+✅ 推荐：
+```java
+String city = json.getStr("data.user.address.city");
+Integer age = json.getInt("user.profile.age");
+String tag = json.getStr("items[0].tags[-1]");  // 支持负索引
+```
+
+❌ 避免：
+```java
+// 不要写多层判空和类型强转
+Map data = (Map) response.get("data");
+if (data != null) {
+    Map user = (Map) data.get("user");
+    if (user != null) {
+        // ...
+    }
+}
+```
+
+### 2. 类型转换
+**使用 JSONMap 的智能类型转换，自动处理类型不匹配**
+
+✅ 推荐：
+```java
+Integer age = json.getInt("age");  // 自动从 String 转 Integer
+BigDecimal price = json.getBigDecimal("price");  // 精确计算
+List<String> tags = json.getList("tags", String.class);  // 自动拆分 "a,b,c"
+User user = json.getObj("user", User.class);  // 直接转 Bean
+```
+
+❌ 避免：
+```java
+// 不要手动 parseInt 和 try-catch
+try {
+    Integer age = Integer.parseInt(params.get("age").toString());
+} catch (Exception e) {
+    age = 0;
+}
+```
+
+### 3. 动态构建
+**使用 JSONMap 的链式操作，自动创建中间层级**
+
+✅ 推荐：
+```java
+JSONMap request = new JSONMap()
+    .set("appId", appId)
+    .set("data.order.orderId", orderId)
+    .set("data.order.amount", amount)
+    .set("user.name", userName);
+```
+
+❌ 避免：
+```java
+// 不要手动创建每一层 Map
+Map<String, Object> request = new HashMap<>();
+Map<String, Object> data = new HashMap<>();
+Map<String, Object> order = new HashMap<>();
+order.put("orderId", orderId);
+data.put("order", order);
+request.put("data", data);
+```
+
+### 4. 数组操作
+**支持数组索引、负索引、自动补齐**
+
+✅ 推荐：
+```java
+String first = json.getStr("items[0].name");  // 第一个
+String last = json.getStr("items[-1].name");  // 最后一个
+json.set("arr[5]", "value");  // 自动补齐前面的元素
+json.add("list", "item");  // 自动创建数组并追加
+```
+
+### 5. 空值安全
+**所有方法都是空值安全的，不会抛 NPE**
+
+✅ 推荐：
+```java
+String city = json.getStr("a.b.c.d");  // 任意一环为 null，返回 null
+Integer age = json.getInt("age", 0);  // 带默认值
+```
+
+### 6. Bean 转换
+**JSONMap 与 Bean 无缝互转**
+
+✅ 推荐：
+```java
+// Bean → JSONMap
+JSONMap data = new JSONMap(userBean);
+
+// JSONMap → Bean（自动纠正类型）
+User user = json.as(User.class);
+
+// 临时添加字段
+JSONMap response = new JSONMap(userBean)
+    .set("extra.timestamp", System.currentTimeMillis());
+```
+
+---
+
+## API 快速参考
+
+### 构造方法
+```java
+new JSONMap()  // 空对象
+new JSONMap("{\"name\":\"张三\"}")  // JSON 字符串
+new JSONMap("name", "张三", "age", 25)  // 键值对
+new JSONMap(userBean)  // 从 Bean 转换
+```
+
+### 读取方法
+```java
+json.getStr("key")  // 获取字符串
+json.getInt("key")  // 获取整数
+json.getLong("key")  // 获取长整数
+json.getDouble("key")  // 获取浮点数
+json.getBigDecimal("key")  // 获取 BigDecimal
+json.getBoolean("key")  // 获取布尔值
+json.getMap("key")  // 获取子对象
+json.getList("key", String.class)  // 获取数组
+json.getObj("key", User.class)  // 获取 Bean
+
+// 带默认值
+json.getStr("key", "default")
+json.getInt("key", 0)
+```
+
+### 写入方法
+```java
+json.set("key", value)  // 设置值（支持深层路径）
+json.add("key", value)  // 追加到数组
+json.put("key", value)  // 普通 Map 操作
+json.remove("key")  // 删除
+json.clearEmptyProp()  // 清除空属性
+```
+
+### 转换方法
+```java
+json.as(User.class)  // 转为 Bean
+json.toString()  // 转为 JSON 字符串
+```
+
+---
+
+## 常见场景示例
+
+### 场景 1：API 对接
+```java
+// 调用第三方 API
+JSONMap request = new JSONMap()
+    .set("appId", config.getAppId())
+    .set("data.userId", userId)
+    .set("data.timestamp", System.currentTimeMillis());
+
+JSONMap response = httpClient.post(url, request);
+
+// 解析响应
+if (response.getInt("code") == 0) {
+    String orderId = response.getStr("data.order.orderId");
+    Integer status = response.getInt("data.order.status");
+    // 处理业务
+}
+```
+
+### 场景 2：Controller 参数处理
+```java
+@PostMapping("/api/user")
+public Result saveUser(@RequestBody JSONMap params) {
+    // 自动类型转换
+    String name = params.getStr("name");
+    Integer age = params.getInt("age");
+    String email = params.getStr("contact.email");
+    
+    // 校验
+    if (params.isEmpty("name")) {
+        return Result.error("名字必填");
+    }
+    
+    // 保存
+    userService.save(params);
+    return Result.ok();
+}
+```
+
+### 场景 3：数据转换
+```java
+// 老系统数据转新系统
+JSONMap source = oldSystem.getData();
+JSONMap target = new JSONMap()
+    .set("userInfo.name", source.getStr("YHM"))
+    .set("userInfo.status", source.getInt("ZT") == 1 ? "ACTIVE" : "LOCKED")
+    .set("userInfo.createTime", source.getLong("CJSJ"));
+```
+
+### 场景 4：配置文件处理
+```java
+// 从数据库读取 JSON 配置
+JSONMap config = new JSONMap(dbConfig.getConfigJson());
+
+// 灵活读取
+boolean isDarkTheme = config.getBoolean("theme.dark_mode", false);
+int maxUpload = config.getInt("limits.upload_size", 1024);
+List<String> whitelist = config.getList("security.whitelist", String.class);
+
+// 灵活修改
+config.set("last_login.ip", request.getRemoteAddr());
+config.set("last_login.time", System.currentTimeMillis());
+```
+
+---
+
+## 注意事项
+
+### 1. 性能
+- JSONMap 底层是 LinkedHashMap，性能与原生 Map 一致
+- 路径解析有缓存优化，不用担心性能问题
+
+### 2. 线程安全
+- JSONMap 不是线程安全的（和 HashMap 一样）
+- 如需线程安全，请使用 ConcurrentHashMap 或加锁
+
+### 3. 子对象引用
+- getMap() 返回的是引用，不是副本
+- 修改子对象会影响原对象
+
+### 4. 类型转换
+- 所有类型转换都是容错的，失败返回 null
+- 使用带默认值的方法可以避免 null 判断
+
+---
+
+## 依赖信息
+
+```xml
+<dependency>
+    <groupId>com.dlz</groupId>
+    <artifactId>dlz-comm</artifactId>
+    <version>6.5.1</version>
+</dependency>
+```
+
+只依赖 jackson-databind，大多数 Spring 项目默认就有。
+
+---
+
+## 更多信息
+
+- GitHub: https://github.com/dlz-xyz/dlz.comm
+- 文档: [README.md](README.md)
+- AI 友好指南: [docs/ai-friendly.md](docs/ai-friendly.md)
+- 完整 API: [docs/jsonmap-jsonlist.md](docs/jsonmap-jsonlist.md)
+
+---
+
+**记住：用 JSONMap，让代码更简洁，让 AI 生成的代码更优雅！**
