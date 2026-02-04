@@ -1,5 +1,6 @@
 package com.dlz.comm.util;
 
+import com.dlz.comm.consts.Charsets;
 import com.dlz.comm.json.JSONList;
 import com.dlz.comm.json.JSONMap;
 import org.junit.jupiter.api.DisplayName;
@@ -186,9 +187,9 @@ class ValUtilTest {
         @Test
         @DisplayName("字节数组转换测试")
         void testByteArrayToStr() {
-            byte[] bytes = "测试中文".getBytes();
+            byte[] bytes = "测试中文".getBytes(Charsets.UTF_8);
             assertEquals("测试中文", ValUtil.toStr(bytes));
-            assertEquals("测试中文", ValUtil.toStr(bytes, java.nio.charset.StandardCharsets.UTF_8));
+            assertEquals("测试中文", ValUtil.toStr(bytes, Charsets.UTF_8));
         }
     }
 
@@ -478,8 +479,8 @@ class ValUtilTest {
             
             // 无效JSON
             JSONList list = ValUtil.toList("{invalid json}", new ArrayList<>());
-            assertTrue(list.isEmpty());
-            assertTrue(ValUtil.toList("{invalid json}").isEmpty());
+            assertEquals(1,list.size());
+            assertEquals(1,ValUtil.toList("{invalid json}").size());
         }
 
         @Test

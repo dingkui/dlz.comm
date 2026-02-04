@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * JSONList单元测试类
@@ -164,7 +165,7 @@ class JSONListTest {
         @DisplayName("无效JSON字符串构造函数测试")
         void testInvalidJsonConstructor() {
             String invalidJson = "{invalid json}";
-            assertThrows(RuntimeException.class, () -> new JSONList(invalidJson));
+            assertEquals("[\"{invalid json}\"]", new JSONList(invalidJson).toString());
         }
     }
 

@@ -1,8 +1,10 @@
 package com.dlz.comm.util;
 
 import com.dlz.comm.json.JSONMap;
+import com.dlz.comm.util.system.annotation.SetValue;
 import com.dlz.test.beans.SourceBean;
 import com.dlz.test.beans.TargetBean;
+import lombok.Data;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,17 +28,11 @@ class BeanUtilTest {
     @DisplayName("属性访问测试")
     class PropertyAccessTests {
 
+        @Data
         class TestBean {
             private String name = "测试名称";
             private int age = 25;
             private List<String> tags = Arrays.asList("标签1", "标签2");
-            
-            public String getName() { return name; }
-            public void setName(String name) { this.name = name; }
-            public int getAge() { return age; }
-            public void setAge(int age) { this.age = age; }
-            public List<String> getTags() { return tags; }
-            public void setTags(List<String> tags) { this.tags = tags; }
         }
 
         @Test
@@ -163,6 +159,42 @@ class BeanUtilTest {
             assertEquals("源名称", target.getStr("name"));
             assertEquals(Integer.valueOf(30), target.getInt("age"));
             assertEquals("test@example.com", target.getStr("email"));
+        }
+    }
+
+
+    @Nested
+    @DisplayName("复制测试")
+    class CopyTests {
+
+        @Data
+        class TestBean {
+            private String name = "测试名称";
+            @SetValue("info")
+            private String xx;
+            @SetValue("info")
+            private String xx2;
+        }
+
+        @Test
+        @DisplayName("bean to map方法测试")
+        void testcopyAsSource() {
+            TestBean bean = new TestBean();
+            bean.setXx("xx");
+            bean.setXx2("xx2");
+            JSONMap target = new JSONMap();
+            BeanUtil.copyAsSource(bean, target,false);
+            assertEquals("{\"name\":\"测试名称\",\"info\":{\"xx\":\"xx\",\"xx2\":\"xx2\"}}", target.toString());
+        }
+
+        @Test
+        @DisplayName("map to bean 方法测试")
+        void testGetValue() {
+            TestBean bean = new TestBean();
+            JSONMap target = new JSONMap("{\"name\":\"测试名称\",\"info\":{\"xx\":\"xx\",\"xx2\":\"xx2\"}}");
+            BeanUtil.copyAsTarget(target, bean,false);
+            assertEquals("xx", bean.xx);
+            assertEquals("xx2", bean.xx2);
         }
     }
 }

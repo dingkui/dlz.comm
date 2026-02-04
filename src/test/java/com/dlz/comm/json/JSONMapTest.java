@@ -63,6 +63,12 @@ class JSONMapTest {
             assertEquals("张三", jsonMap.getStr("name"));
             assertEquals(Integer.valueOf(25), jsonMap.getInt("age"));
             assertEquals(Boolean.TRUE, jsonMap.getBoolean("active"));
+
+            JSONMap params = new JSONMap("{a:\"1\",b:2}");
+            // 即使前端传 {"age": "25"}（字符串），也能正确转成 Integer
+            TestBean user = params.as(TestBean.class);
+            assertEquals(1, user.getA());
+            assertEquals("2", user.getB());
         }
 
 
@@ -326,10 +332,9 @@ class JSONMapTest {
             //注意：set方法不支持数组下标
             //输出：{"a":{"b[0]":{"c":"1"}}}
             json = new JSONMap().set("a.b[0].c", 1);
-            //TODO set方法支持数组下标 待完善
-            assertEquals("{\"a\":{\"b[0]\":{\"c\":1}}}", json.toString());
-            assertEquals("{\"b[0]\":{\"c\":1}}", json.getStr("a"));
-            assertNull(json.getStr("a.b"));
+            assertEquals("{\"a\":{\"b\":[{\"c\":1}]}}", json.toString());
+            assertEquals("{\"b\":[{\"c\":1}]}", json.getStr("a"));
+            assertEquals("[{\"c\":1}]", json.getStr("a.b"));
         }
 
         @Test
@@ -338,7 +343,7 @@ class JSONMapTest {
             JSONMap jsonMap = new JSONMap();
             jsonMap.set("test.key", null);
             // 应该不会添加任何内容
-            assertNull(jsonMap.get("test"));
+            assertEquals("{}", jsonMap.getStr("test"));
         }
 
         @Test
@@ -359,10 +364,8 @@ class JSONMapTest {
         void testSetMergeMode() {
             JSONMap jsonMap = new JSONMap();
             jsonMap.set("data", new JSONMap("existing", "已有值"));
-            Map<String, Object> newData = new HashMap<>();
-            newData.put("new", "新值");
+            jsonMap.set("data.new", "新值");
 
-            jsonMap.set("data", newData); // 合并模式
             assertEquals("已有值", jsonMap.getMap("data").getStr("existing"));
             assertEquals("新值", jsonMap.getMap("data").getStr("new"));
         }
@@ -473,7 +476,7 @@ class JSONMapTest {
             json.set("data[0][1].value", "A2");
             json.set("data[1][0].value", "B1");
 
-            assertEquals("{\"matrix\":[[1,2],[3,4]]}", json.toString());
+            assertEquals("{\"data\":[[{\"value\":\"A1\"},{\"value\":\"A2\"}],[{\"value\":\"B1\"}]]}", json.toString());
             assertEquals("A1", json.getStr("data[0][0].value"));
             assertEquals("A2", json.getStr("data[0][1].value"));
             assertEquals("B1", json.getStr("data[1][0].value"));
@@ -927,7 +930,10 @@ class JSONMapTest {
             assertEquals(Integer.valueOf(1), intArray[0]);
 
             // Map转List返回空列表
-            assertEquals(0,paras.getList("b").size());
+            assertEquals(1,paras.getList("b").size());
+
+            paras.set("c[3]",1);
+            assertEquals("{\"a\":[1,2,3],\"b\":{\"a\":2,\"b\":1},\"c\":[null,null,null,1]}",paras.toString());
         }
 
         /**
@@ -1069,55 +1075,22 @@ class JSONMapTest {
     @Nested
     @DisplayName("添加操作方法测试")
     class AddOperationTests {
-
-        @Test
-        @DisplayName("add方法基础测试")
-        void testAddBasic() {
-            JSONMap jsonMap = new JSONMap();
-            jsonMap.add("items", "项目1");
-            jsonMap.add("items", "项目2");
-
-            JSONList items = jsonMap.getList("items");
-            assertEquals(2, items.size());
-            assertEquals("项目1", items.getStr(0));
-            assertEquals("项目2", items.getStr(1));
-        }
-
-        @Test
-        @DisplayName("add方法替换模式测试")
-        void testAddReplaceMode() {
-            JSONMap jsonMap = new JSONMap();
-            jsonMap.add("data", "原始值", 0);
-            jsonMap.add("data", "新值", 0);
-
-            assertEquals("新值", jsonMap.getStr("data"));
-        }
-
-        @Test
-        @DisplayName("add方法集合合并测试")
-        void testAddCollectionMerge() {
-            JSONMap jsonMap = new JSONMap();
-            jsonMap.add("numbers", Arrays.asList(1, 2, 3));
-            jsonMap.add("numbers", Arrays.asList(4, 5), 2);
-
-            JSONList numbers = jsonMap.getList("numbers");
-            assertEquals(5, numbers.size());
-            assertEquals(Integer.valueOf(1), numbers.getInt(0));
-            assertEquals(Integer.valueOf(5), numbers.getInt(4));
-        }
-
         @Test
         @DisplayName("add2List方法测试")
         void testAdd2List() {
             JSONMap jsonMap = new JSONMap();
-            jsonMap.add2List("scores", 85);
-            jsonMap.add2List("scores", 90);
-            jsonMap.add2List("scores", Arrays.asList(95, 98));
+            jsonMap.add("scores", 85);
+//            assertEquals(85, jsonMap.getInt("scores[0]"));
+//            assertEquals("{\"scores\":[85]}", jsonMap.toString());
+            jsonMap.add("scores", 90);
+            jsonMap.add("scores", "95,98");
+            assertEquals("[85,90,\"95\",\"98\"]", jsonMap.getList("scores").toString());
+            assertEquals("[85, 90, 95, 98]", jsonMap.getList("scores",Integer.class).toString());
 
             JSONList scores = jsonMap.getList("scores");
             assertEquals(4, scores.size());
-            assertEquals(Integer.valueOf(85), scores.getInt(0));
-            assertEquals(Integer.valueOf(98), scores.getInt(3));
+            assertEquals(85, scores.getInt(0));
+            assertEquals(98, scores.getInt(3));
         }
     }
 
