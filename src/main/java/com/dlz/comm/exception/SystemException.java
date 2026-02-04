@@ -114,7 +114,7 @@ public class SystemException extends BaseException {
 	 * @param c 异常消息提供者
 	 */
 	public static void isTrue(boolean expression, Supplier<String> c) {
-		if (!expression) {
+		if (expression) {
 			throw new SystemException(c.get());
 		}
 	}
@@ -140,7 +140,7 @@ public class SystemException extends BaseException {
 	 * @param c 异常消息提供者
 	 */
 	public static void notNull(Object object, Supplier<String> c) {
-		isTrue(object != null, c);
+		isTrue(object == null, c);
 	}
 
 	/**
@@ -164,7 +164,7 @@ public class SystemException extends BaseException {
 	 * @param c 异常消息提供者
 	 */
 	public static void notEmpty(Object value, Supplier<String> c) {
-		isTrue(!StringUtils.isEmpty(value), c);
+		isTrue(StringUtils.isEmpty(value), c);
 	}
 
 }
