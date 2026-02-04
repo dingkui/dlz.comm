@@ -187,12 +187,12 @@ public Result saveUser(@RequestBody JSONMap params) {
     String name = params.getStr("name");
     Integer age = params.getInt("age");
     String email = params.getStr("contact.email");
-    
+
     // 校验
     if (params.isEmpty("name")) {
         return Result.error("名字必填");
     }
-    
+
     // 保存
     userService.save(params);
     return Result.ok();
@@ -250,7 +250,7 @@ config.set("last_login.time", System.currentTimeMillis());
 
 ```xml
 <dependency>
-    <groupId>com.dlz</groupId>
+    <groupId>top.dlzio</groupId>
     <artifactId>dlz-comm</artifactId>
     <version>6.5.1</version>
 </dependency>

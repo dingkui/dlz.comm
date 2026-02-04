@@ -30,7 +30,7 @@ String city = json.getStr("user.profile.addresses[0].city");
 ### 1. 添加依赖
 ```xml
 <dependency>
-    <groupId>com.dlz</groupId>
+    <groupId>top.dlzio</groupId>
     <artifactId>dlz-comm</artifactId>
     <version>6.5.1</version>
 </dependency>
