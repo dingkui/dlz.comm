@@ -98,6 +98,15 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
     public static JSONMap createJsonMap(Object json) {
         return new JSONMap(json);
     }
+    /**
+     * 创建JSONMap实例
+     *
+     * @param json 源JSON数据
+     * @return JSONMap实例
+     */
+    public static JSONMap createWithJson(String json) {
+        return JacksonUtil.read(json,JSONMap.class);
+    }
 
     /**
      * 将JSONMap转换为指定类型的Map
@@ -137,7 +146,7 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
      *   如：a.b.c.d
      *       a[0][1].c.d
      *       a[0].b[1].d
-     *       a.b[1].c  
+     *       a.b[1].c
      * @param value 要设定的值
      * @return 当前实例
      */
@@ -145,15 +154,15 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
         if(StringUtils.isEmpty(key)) {
             throw new SystemException("key不能为空");
         }
-        
+
         // 使用 splitKey1 拆分键
         VAL<String, String> keys = JacksonUtil.splitKey(key);
         String currentKey = keys.v1;
         String remainingKey = keys.v2;
-        
+
         // 判断当前键是否包含数组索引
         int bracketIndex = currentKey.indexOf("[");
-        
+
         if(bracketIndex == -1) {
             // 情况1: 普通键，如 a 或 user
             if(remainingKey == null) {
@@ -163,7 +172,7 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
                 // 还有下一级，需要获取或创建 JSONMap
                 Object existing = get(currentKey);
                 JSONMap childMap;
-                
+
                 if(existing == null) {
                     childMap = new JSONMap();
                     put(currentKey, childMap);
@@ -172,20 +181,20 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
                 } else {
                     throw new SystemException("键 '" + currentKey + "' 的值类型不匹配，期望 JSONMap，实际为 " + existing.getClass().getSimpleName());
                 }
-                
+
                 childMap.set(remainingKey, value);
             }
         } else {
             // 情况2: 包含数组索引，如 a[0] 或 [0]
             handleArrayKey(currentKey, remainingKey, value);
         }
-        
+
         return this;
     }
-    
+
     /**
      * 处理包含数组索引的键
-     * 
+     *
      * @param currentKey 当前键，如 a[0][1] 或 [0]
      * @param remainingKey 剩余键
      * @param value 要设置的值
@@ -194,7 +203,7 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
         // 解析数组键，如 a[0][1] -> arrayName=a, indices=[0,1]
         String arrayName;
         List<Integer> indices = new ArrayList<>();
-        
+
         if(currentKey.startsWith("[")) {
             // 以 [ 开头，如 [0] 或 [0][1]
             arrayName = "";
@@ -205,11 +214,11 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
             arrayName = currentKey.substring(0, firstBracket);
             parseArrayIndices(currentKey, firstBracket, indices);
         }
-        
+
         // 获取或创建数组
         Object existing = arrayName.isEmpty() ? null : get(arrayName);
         JSONList list;
-        
+
         if(existing == null) {
             list = new JSONList();
             if(!arrayName.isEmpty()) {
@@ -223,14 +232,14 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
         } else {
             throw new SystemException("键 '" + arrayName + "' 的值类型不匹配，期望 JSONList，实际为 " + existing.getClass().getSimpleName());
         }
-        
+
         // 递归处理多维数组索引
         setArrayValue(list, indices, 0, remainingKey, value);
     }
-    
+
     /**
      * 解析数组索引，如 [0][1][2] -> [0, 1, 2]
-     * 
+     *
      * @param key 包含数组索引的键
      * @param startPos 开始位置
      * @param indices 输出的索引列表
@@ -242,26 +251,26 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
             if(rightBracket == -1) {
                 throw new SystemException("数组下标格式错误，缺少右括号: " + key);
             }
-            
+
             String indexStr = key.substring(pos + 1, rightBracket);
             if(indexStr.isEmpty()) {
                 throw new SystemException("数组下标不能为空: " + key);
             }
-            
+
             try {
                 int index = Integer.parseInt(indexStr);
                 indices.add(index);
             } catch(NumberFormatException e) {
                 throw new SystemException("数组下标必须是整数: " + indexStr);
             }
-            
+
             pos = rightBracket + 1;
         }
     }
-    
+
     /**
      * 递归设置数组值
-     * 
+     *
      * @param list 当前数组
      * @param indices 索引列表
      * @param currentLevel 当前处理的索引层级
@@ -270,7 +279,7 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
      */
     private void setArrayValue(JSONList list, List<Integer> indices, int currentLevel, String remainingKey, Object value) {
         int index = indices.get(currentLevel);
-        
+
         // 处理负数索引
         if(index < 0) {
             index = list.size() + index;
@@ -278,12 +287,12 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
                 index = 0;
             }
         }
-        
+
         // 扩展数组大小
         while(list.size() <= index) {
             list.add(null);
         }
-        
+
         if(currentLevel == indices.size() - 1) {
             // 最后一个索引
             if(remainingKey == null) {
@@ -293,7 +302,7 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
                 // 还有剩余键，需要获取或创建 JSONMap
                 Object existing = list.get(index);
                 JSONMap childMap;
-                
+
                 if(existing == null) {
                     childMap = new JSONMap();
                     list.set(index, childMap);
@@ -302,14 +311,14 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
                 } else {
                     throw new SystemException("数组索引 [" + index + "] 的值类型不匹配，期望 JSONMap，实际为 " + existing.getClass().getSimpleName());
                 }
-                
+
                 childMap.set(remainingKey, value);
             }
         } else {
             // 还有更多索引，需要获取或创建嵌套数组
             Object existing = list.get(index);
             JSONList childList;
-            
+
             if(existing == null) {
                 childList = new JSONList();
                 list.set(index, childList);
@@ -321,7 +330,7 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
             } else {
                 throw new SystemException("数组索引 [" + index + "] 的值类型不匹配，期望 JSONList，实际为 " + existing.getClass().getSimpleName());
             }
-            
+
             setArrayValue(childList, indices, currentLevel + 1, remainingKey, value);
         }
     }
@@ -351,6 +360,16 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
     public JSONMap put(String key, Object value) {
         super.put(key, value);
         return this;
+    }
+
+    /**
+     * 取得
+     *
+     * @param key 键
+     * @return 当前实例
+     */
+    public <T> T get(String key) {
+        return (T)super.get(key);
     }
 
     /**

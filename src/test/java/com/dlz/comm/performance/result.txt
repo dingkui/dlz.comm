@@ -1,0 +1,122 @@
+========================================
+JSONMap 性能测试: 采用stream
+========================================
+
+【场景 1】构造 1 次，读取多次
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 读取次数         │ 传统方式       │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 100次            │      222 μs │        8 μs (快96%)       │        4 μs (快98%)       │
+│ 1K              │        6 μs │        5 μs (快17%)       │        2 μs (快67%)       │
+│ 1万              │       13 μs │       11 μs (快15%)       │       10 μs (快23%)       │
+│ 5万              │       58 μs │       40 μs (快31%)       │       40 μs (快31%)       │
+│ 10万             │       79 μs │       77 μs (快3%)        │       75 μs (快5%)        │
+│ 100万            │     1150 μs │     1083 μs (快6%)        │      688 μs (快40%)       │
+│ 500万            │     3934 μs │     3521 μs (快10%)       │     3330 μs (快15%)       │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+【场景 1】构造 1 次，读取多次。多线程执行
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 读取次数         │ 传统方式       │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 100次            │     4689 μs │       26 μs (快99%)       │       13 μs (快100%)      │
+│ 1K              │       18 μs │        8 μs (快56%)       │        6 μs (快67%)       │
+│ 1万              │       22 μs │       14 μs (快36%)       │       17 μs (快23%)       │
+│ 5万              │       64 μs │       94 μs (慢47%)       │       80 μs (慢25%)       │
+│ 10万             │      115 μs │      118 μs (慢3%)        │       97 μs (快16%)       │
+│ 100万            │      834 μs │      583 μs (快30%)       │      575 μs (快31%)       │
+│ 500万            │     4295 μs │     3511 μs (快18%)       │     7759 μs (慢81%)       │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+【场景 2】构造和读取多次
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 次数             │ 传统方式      │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 1K              │      137 μs │        3 μs (快98%)       │       11 μs (快92%)       │
+│ 1万              │       26 μs │       10 μs (快62%)       │        9 μs (快65%)       │
+│ 5万              │       43 μs │       39 μs (快9%)        │       70 μs (慢63%)       │
+│ 10万             │      113 μs │       82 μs (快27%)       │       81 μs (快28%)       │
+│ 100万            │     1095 μs │     1001 μs (快9%)        │      200 μs (快82%)       │
+│ 500万            │     1053 μs │     1042 μs (快1%)        │     2724 μs (慢159%)      │
+│ 1000万           │     2099 μs │     2087 μs (快1%)        │     1701 μs (快19%)       │
+│ 1亿              │    71546 μs │    66185 μs (快7%)        │    64978 μs (快9%)        │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+【场景 2】构造和读取多次。多线程执行
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 次数             │ 传统方式      │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 1K              │      279 μs │        7 μs (快97%)       │        5 μs (快98%)       │
+│ 1万              │       17 μs │       17 μs (相同)         │       16 μs (快6%)        │
+│ 5万              │       74 μs │       69 μs (快7%)        │       51 μs (快31%)       │
+│ 10万             │      123 μs │       96 μs (快22%)       │      134 μs (慢9%)        │
+│ 100万            │      134 μs │      136 μs (慢1%)        │      160 μs (慢19%)       │
+│ 500万            │     1688 μs │    64783 μs (慢3738%)     │     1275 μs (快24%)       │
+│ 1000万           │     1728 μs │     1490 μs (快14%)       │     1537 μs (快11%)       │
+│ 1亿              │    69166 μs │    70416 μs (慢2%)        │    74976 μs (慢8%)        │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+D:\java\jdk\jdk1.8.0_66\bin\java.exe -javaagent:D:\code\ide\JetBrains\Toolbox\apps\IDEA-U\ch-2\251.26094.98\plugins\java\lib\rt\debugger-agent.jar=file:///C:/Users/dingkui/AppData/Local/Temp/capture16384192831810531023.props -ea -Didea.test.cyclic.buffer.size=1048576 -javaagent:D:\code\ide\JetBrains\Toolbox\apps\IDEA-U\ch-2\251.26094.98\lib\idea_rt.jar=2651 -Dkotlinx.coroutines.debug.enable.creation.stack.trace=false -Ddebugger.agent.enable.coroutines=true -Dkotlinx.coroutines.debug.enable.flows.stack.trace=true -Dkotlinx.coroutines.debug.enable.mutable.state.flows.stack.trace=true -Dfile.encoding=UTF-8 -classpath D:\java\MavenRepo2\org\junit\platform\junit-platform-launcher\1.8.1\junit-platform-launcher-1.8.1.jar;D:\java\MavenRepo2\org\junit\vintage\junit-vintage-engine\5.8.1\junit-vintage-engine-5.8.1.jar;D:\code\ide\JetBrains\Toolbox\apps\IDEA-U\ch-2\251.26094.98\lib\idea_rt.jar;D:\code\ide\JetBrains\Toolbox\apps\IDEA-U\ch-2\251.26094.98\plugins\junit\lib\junit5-rt.jar;D:\code\ide\JetBrains\Toolbox\apps\IDEA-U\ch-2\251.26094.98\plugins\junit\lib\junit-rt.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\charsets.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\deploy.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\access-bridge-64.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\cldrdata.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\dnsns.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\jaccess.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\jfxrt.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\localedata.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\nashorn.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\sunec.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\sunjce_provider.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\sunmscapi.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\sunpkcs11.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\ext\zipfs.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\javaws.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\jce.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\jfr.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\jfxswt.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\jsse.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\management-agent.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\plugin.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\resources.jar;D:\java\jdk\jdk1.8.0_66\jre\lib\rt.jar;D:\gits\dlz\dlz.comm\target\test-classes;D:\gits\dlz\dlz.comm\target\classes;D:\java\MavenRepo2\com\fasterxml\jackson\core\jackson-databind\2.13.4.2\jackson-databind-2.13.4.2.jar;D:\java\MavenRepo2\com\fasterxml\jackson\core\jackson-annotations\2.13.4\jackson-annotations-2.13.4.jar;D:\java\MavenRepo2\com\fasterxml\jackson\core\jackson-core\2.13.4\jackson-core-2.13.4.jar;D:\java\MavenRepo2\org\slf4j\slf4j-api\1.7.32\slf4j-api-1.7.32.jar;D:\java\MavenRepo2\org\projectlombok\lombok\1.18.30\lombok-1.18.30.jar;D:\java\MavenRepo2\junit\junit\4.13.2\junit-4.13.2.jar;D:\java\MavenRepo2\org\hamcrest\hamcrest-core\1.3\hamcrest-core-1.3.jar;D:\java\MavenRepo2\org\junit\jupiter\junit-jupiter\5.8.1\junit-jupiter-5.8.1.jar;D:\java\MavenRepo2\org\junit\jupiter\junit-jupiter-api\5.8.1\junit-jupiter-api-5.8.1.jar;D:\java\MavenRepo2\org\opentest4j\opentest4j\1.2.0\opentest4j-1.2.0.jar;D:\java\MavenRepo2\org\junit\platform\junit-platform-commons\1.8.1\junit-platform-commons-1.8.1.jar;D:\java\MavenRepo2\org\apiguardian\apiguardian-api\1.1.2\apiguardian-api-1.1.2.jar;D:\java\MavenRepo2\org\junit\jupiter\junit-jupiter-params\5.8.1\junit-jupiter-params-5.8.1.jar;D:\java\MavenRepo2\org\junit\jupiter\junit-jupiter-engine\5.8.1\junit-jupiter-engine-5.8.1.jar;D:\java\MavenRepo2\org\junit\platform\junit-platform-engine\1.8.1\junit-platform-engine-1.8.1.jar;D:\java\MavenRepo2\commons-logging\commons-logging\1.2\commons-logging-1.2.jar;D:\java\MavenRepo2\ch\qos\logback\logback-classic\1.2.3\logback-classic-1.2.3.jar;D:\java\MavenRepo2\ch\qos\logback\logback-core\1.2.3\logback-core-1.2.3.jar com.intellij.rt.junit.JUnitStarter -ideVersion5 -junit5 com.dlz.comm.performance.JSONMapPerformanceTest,runAllPerformanceTests
+========================================
+JSONMap 性能测试: 采用stream
+========================================
+
+【场景 1】构造 1 次，读取多次
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 读取次数         │ 传统方式       │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 100次            │      245 μs │       10 μs (快96%)       │        3 μs (快99%)       │
+│ 1K              │        4 μs │        2 μs (快50%)       │        4 μs (相同)         │
+│ 1万              │       12 μs │       10 μs (快17%)       │       14 μs (慢17%)       │
+│ 5万              │       58 μs │       71 μs (慢22%)       │       59 μs (慢2%)        │
+│ 10万             │      121 μs │      105 μs (快13%)       │      137 μs (慢13%)       │
+│ 100万            │      966 μs │      828 μs (快14%)       │      890 μs (快8%)        │
+│ 500万            │     3443 μs │     4012 μs (慢17%)       │     3405 μs (快1%)        │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+【场景 1】构造 1 次，读取多次。多线程执行
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 读取次数         │ 传统方式       │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 100次            │     4201 μs │       17 μs (快100%)      │       14 μs (快100%)      │
+│ 1K              │       11 μs │        7 μs (快36%)       │        6 μs (快45%)       │
+│ 1万              │       17 μs │       14 μs (快18%)       │       13 μs (快24%)       │
+│ 5万              │       55 μs │       58 μs (慢5%)        │       45 μs (快18%)       │
+│ 10万             │       89 μs │       86 μs (快3%)        │       82 μs (快8%)        │
+│ 100万            │      772 μs │      717 μs (快7%)        │      865 μs (慢12%)       │
+│ 500万            │     3366 μs │     3417 μs (慢2%)        │     7415 μs (慢120%)      │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+【场景 2】构造和读取多次
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 次数             │ 传统方式      │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 1K              │      160 μs │        4 μs (快98%)       │      111 μs (快31%)       │
+│ 1万              │       23 μs │        9 μs (快61%)       │        9 μs (快61%)       │
+│ 5万              │       43 μs │       41 μs (快5%)        │       50 μs (慢16%)       │
+│ 10万             │       88 μs │       78 μs (快11%)       │      105 μs (慢19%)       │
+│ 100万            │      997 μs │      729 μs (快27%)       │      135 μs (快86%)       │
+│ 500万            │      808 μs │      832 μs (慢3%)        │     1845 μs (慢128%)      │
+│ 1000万           │     1570 μs │     1585 μs (慢1%)        │     1615 μs (慢3%)        │
+│ 1亿              │    65889 μs │    65580 μs (快0%)        │    66696 μs (慢1%)        │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+【场景 2】构造和读取多次。多线程执行
+┌─────────────────┬──────────────┬────────────────────────┬────────────────────────┐
+│ 次数             │ 传统方式      │ JSONMap 直接路径         │ JSONMap 子对象         │
+├─────────────────┼──────────────┼────────────────────────┼────────────────────────┤
+│ 1K              │      282 μs │        7 μs (快98%)       │        5 μs (快98%)       │
+│ 1万              │       15 μs │       26 μs (慢73%)       │       19 μs (慢27%)       │
+│ 5万              │       59 μs │       51 μs (快14%)       │       74 μs (慢25%)       │
+│ 10万             │      135 μs │      115 μs (快15%)       │       87 μs (快36%)       │
+│ 100万            │      129 μs │      144 μs (慢12%)       │      141 μs (慢9%)        │
+│ 500万            │     1866 μs │    55976 μs (慢2900%)     │     1354 μs (快27%)       │
+│ 1000万           │     1495 μs │     2265 μs (慢52%)       │     1795 μs (慢20%)       │
+│ 1亿              │    68626 μs │    64692 μs (快6%)        │    71025 μs (慢3%)        │
+└─────────────────┴──────────────┴────────────────────────┴────────────────────────┘
+
+========================================
+测试完成！
+========================================
+
+进程已结束，退出代码为 0

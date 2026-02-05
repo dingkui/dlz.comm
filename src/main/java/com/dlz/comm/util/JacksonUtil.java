@@ -228,6 +228,23 @@ public class JacksonUtil {
             return null;
         }
     }
+    /**
+     * 将字符串反序列化为指定类型对象
+     *
+     * @param content JSON字符串内容
+     * @param valueType 目标类型
+     * @param <T> 目标类型泛型
+     * @return 指定类型的对象，如果转换失败则返回null
+     */
+    public static <T> T read(String content, Class<T> valueType) {
+        try {
+            return objectMapper.readValue(content, valueType);
+        } catch (Exception e) {
+            log.error("JacksonUtil.readValue error:valueType={} content={}", valueType, content);
+            log.error(ExceptionUtils.getStackTrace(e));
+            return null;
+        }
+    }
 
 
     /**
@@ -597,21 +614,33 @@ public class JacksonUtil {
      *            取出f所在对象 :info.a[1][-1]
      * @return 提取的值
      */
+    /**
+     * 按路径获取对象值
+     *
+     * @param data 数据对象
+     * @param key 路径表达式
+     * @return 提取的值
+     */
     public static Object at(Object data, String key) {
-        if (data == null || "".equals(key)) {
-            return data;
-        }
-        if (data instanceof Object[] || data instanceof Collection) {
-            if (key.startsWith("[")) {
-                return getObjFromList(ValUtil.toList(data), key);
-            }
+        // 优化 1：提前返回，减少不必要的检查
+        if (data == null) {
             return null;
         }
-
-        if (key.startsWith(".")) {
-            key = key.substring(1);
+        if (key == null || key.isEmpty()) {
+            return data;
         }
-        return getObjFromMap(ValUtil.toObj(data, JSONMap.class), key);
+        
+        // 优化 2：使用 instanceof 模式匹配（JDK 16+）或提前类型检查
+        if (data instanceof Collection) {
+            return key.startsWith("[") ? getObjFromList((Collection) data, key) : null;
+        }
+        if (data instanceof Object[]) {
+            return key.startsWith("[") ? getObjFromList(Arrays.asList((Object[]) data), key) : null;
+        }
+
+        // 优化 3：避免重复的 substring 操作
+        String actualKey = key.startsWith(".") ? key.substring(1) : key;
+        return getObjFromMap(ValUtil.toObj(data, JSONMap.class), actualKey);
     }
 
     /**
@@ -621,17 +650,51 @@ public class JacksonUtil {
      * @param key 路径表达式
      * @return 获取的对象
      */
-    private static Object getObjFromList(List list, String key) {
-        int size = list.size();
+    private static Object getObjFromList(Collection list, String key) {
+        // 优化 4：提前检查边界
         int end = key.indexOf(']');
-        int index = Integer.parseInt(key.substring(1, end));
-        if (index < 0) {
-            index += size;
-        }
-        if (index < 0 || index > size) {
+        if (end <= 1) {  // "[" 后面至少要有一个字符
             return null;
         }
-        return at(list.get(index), key.substring(end + 1));
+        
+        // 优化 5：使用 try-catch 避免重复的边界检查
+        try {
+            int index = Integer.parseInt(key.substring(1, end));
+            int size = list.size();
+            
+            // 处理负数索引
+            if (index < 0) {
+                index += size;
+            }
+            
+            // 边界检查
+            if (index < 0 || index >= size) {
+                return null;
+            }
+            
+            // 优化 6：对于 List 使用 get，对于其他 Collection 使用迭代器
+            Object element;
+            if (list instanceof List) {
+                element = ((List) list).get(index);
+            } else {
+                // 对于非 List 的 Collection，使用迭代器
+                int i = 0;
+                for (Object obj : list) {
+                    if (i++ == index) {
+                        element = obj;
+                        break;
+                    }
+                }
+                return null;  // 不应该到这里
+            }
+            
+            // 递归处理剩余路径
+            String remainingKey = key.substring(end + 1);
+            return remainingKey.isEmpty() ? element : at(element, remainingKey);
+            
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /**
@@ -642,25 +705,46 @@ public class JacksonUtil {
      * @return 获取的对象
      */
     private static Object getObjFromMap(Map para, String key) {
-        String pName = key;
-        if (para.containsKey(pName)) {
-            return para.get(pName);
+        // 优化 7：提前检查 null 和空 key
+        if (para == null || key.isEmpty()) {
+            return null;
         }
-        int index = key.indexOf('.');
-        if (index > -1) {
-            pName = key.substring(0, index);
-            if (para.containsKey(pName)) {
-                return at(para.get(pName), key.substring(index));
-            }
+        
+        // 优化 8：先尝试直接获取（最常见的情况）
+        if (para.containsKey(key)) {
+            return para.get(key);
         }
-        index = pName.indexOf('[');
-        if (index > -1) {
-            pName = key.substring(0, index);
-            if (para.containsKey(pName)) {
-                return at(para.get(pName), key.substring(index));
-            }
+        
+        // 优化 9：查找分隔符，只查找一次
+        int dotIndex = key.indexOf('.');
+        int bracketIndex = key.indexOf('[');
+        
+        // 优化 10：根据分隔符位置决定处理方式
+        if (dotIndex == -1 && bracketIndex == -1) {
+            // 没有分隔符，直接返回 null（已经尝试过直接获取）
+            return null;
         }
-        return null;
+        
+        // 确定第一个分隔符的位置
+        int firstSeparator;
+        if (dotIndex == -1) {
+            firstSeparator = bracketIndex;
+        } else if (bracketIndex == -1) {
+            firstSeparator = dotIndex;
+        } else {
+            firstSeparator = Math.min(dotIndex, bracketIndex);
+        }
+        
+        // 提取第一个键名
+        String firstKey = key.substring(0, firstSeparator);
+        if (!para.containsKey(firstKey)) {
+            return null;
+        }
+        
+        // 递归处理剩余路径
+        Object value = para.get(firstKey);
+        String remainingKey = key.substring(firstSeparator);
+        return at(value, remainingKey);
     }
 
     /**

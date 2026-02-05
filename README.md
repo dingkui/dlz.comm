@@ -79,7 +79,7 @@ if (response != null) {
 String city = new JSONMap(response).getStr("data.user.profile.addresses[0].city");
 ```
 
-> **12 行 → 1 行，代码量减少 90%**
+> **20 行 → 1 行，代码量减少 90%**
 
 ---
 
@@ -259,14 +259,15 @@ User user = params.as(User.class);
 <details>
 <summary><b>Q: 性能怎么样？</b></summary>
 
-底层就是 `LinkedHashMap`，性能与原生 Map 一致。路径解析有缓存优化。
+底层就是 `HashMap`，性能与原生 Map 一致。
+ - [性能测试报告](docs/REAL_PERFORMANCE_REPORT.md) 
 
 </details>
 
 <details>
 <summary><b>Q: 会和现有代码冲突吗？</b></summary>
 
-不会。JSONMap 继承自 `LinkedHashMap`，可以当普通 Map 使用，完全兼容。
+不会。JSONMap 继承自 `HashMap`，可以当普通 Map 使用，完全兼容。
 
 </details>
 
@@ -276,11 +277,12 @@ User user = params.as(User.class);
 都支持。JSONMap 不依赖 Spring，只依赖 Jackson。
 
 </details>
+
 ---
 ## 🌟 Star History
 如果觉得有帮助，请点个 ⭐ 支持一下！
----
-<div align="center">
+
 **用 1 行代码做完 10 行的事，这就是 JSONMap。**
+<div align="center">
 Made with ❤️ by DLZ
 </div>

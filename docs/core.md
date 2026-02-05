@@ -369,21 +369,21 @@ json.getMap("user");                      // ✅
 
 ### 快速链接
 - [返回首页](../README.md)
-- [GitHub 仓库](https://github.com/dlz-xyz/dlz.comm)
-- [问题反馈](https://github.com/dlz-xyz/dlz.comm/issues)
+- [GitHub 仓库](https://github.com/dingkui/dlz.comm)
+- [问题反馈](https://github.com/dingkui/dlz.comm/issues)
 
 ---
 
 ## 💡 常见问题
 
 ### Q: JSONMap 和普通 HashMap 有什么区别？
-A: JSONMap 继承自 LinkedHashMap，完全兼容 Map 接口。额外提供深层路径访问、自动类型转换、链式构建等功能。
+A: JSONMap 继承自 HashMap，完全兼容 Map 接口。额外提供深层路径访问、自动类型转换、链式构建等功能。
 
 ### Q: 路径访问失败会抛异常吗？
 A: 不会。路径中任意一环为 null，直接返回 null，绝无 NPE。
 
 ### Q: 性能怎么样？
-A: 底层就是 LinkedHashMap，性能与原生 Map 一致。路径解析有缓存优化。
+A: 底层就是 HashMap，性能与原生 Map 一致。路径解析有缓存优化。
 
 ### Q: 支持哪些 JSON 格式？
 A: 支持标准 JSON、简化 JSON（key 不加引号）、带注释的 JSON。

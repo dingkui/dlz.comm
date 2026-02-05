@@ -328,6 +328,17 @@ public interface IUniversalVals {
     }
 
     /**
+     * 获取指定键的对象值
+     *
+     * @param key 键名
+     * @param <T> 目标类型泛型
+     * @return 指定类型的对象值
+     */
+    default <T> T at(String key) {
+        return (T)getKeyVal(key);
+    }
+
+    /**
      * 将当前对象转换为指定类型
      *
      * @param classs 目标类型

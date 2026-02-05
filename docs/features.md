@@ -14,7 +14,7 @@
 **一行代码穿透任意层级，告别判空地狱**
 
 ```java
-// ❌ 传统方式：12 行代码
+// ❌ 传统方式：20 行代码
 Map<String, Object> data = getData();
 String city = null;
 if (data != null && data.get("user") != null) {
@@ -485,7 +485,7 @@ BeanUtil.copyAsSource(user, json, false);
 
 ### 性能说明
 
-- **底层实现**：基于 LinkedHashMap，性能与原生 Map 一致
+- **底层实现**：基于 HashMap，性能与原生 Map 一致
 - **路径解析**：首次解析后会缓存，后续访问很快
 - **类型转换**：基于 Jackson，性能优秀
 - **内存占用**：与普通 Map 相当
@@ -498,6 +498,6 @@ BeanUtil.copyAsSource(user, json, false);
 
 如果觉得有帮助，请点个 ⭐ Star 支持一下！
 
-[返回首页](../README.md) | [完整文档](./jsonmap-jsonlist.md) | [GitHub](https://github.com/dlz-xyz/dlz.comm)
+[返回首页](../README.md) | [完整文档](./jsonmap-jsonlist.md) | [GitHub](https://github.com/dingkui/dlz.comm)
 
 </div>

@@ -68,7 +68,7 @@ String productName = data.getStr("orders[0].items[-1].product.name");
 **传统方式 vs JSONMap：**
 
 ```java
-// ❌ 传统方式：12 行代码，层层判空
+// ❌ 传统方式：20 行代码，层层判空
 Map<String, Object> data = getData();
 String city = null;
 if (data != null) {
@@ -755,7 +755,7 @@ for (String item : items) {
 
 ### Q: JSONMap 和普通 HashMap 有什么区别？
 
-A: JSONMap 继承自 LinkedHashMap，完全兼容 Map 接口。额外提供：
+A: JSONMap 继承自 HashMap，完全兼容 Map 接口。额外提供：
 - 深层路径访问
 - 自动类型转换
 - 链式构建
@@ -767,7 +767,7 @@ A: 不会。路径中任意一环为 null，直接返回 null，绝无 NPE。
 
 ### Q: 性能怎么样？
 
-A: 底层就是 LinkedHashMap，性能与原生 Map 一致。路径解析有缓存优化。
+A: 底层就是 HashMap，性能与原生 Map 一致。路径解析有缓存优化。
 
 ### Q: 支持哪些 JSON 格式？
 
