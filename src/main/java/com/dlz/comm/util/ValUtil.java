@@ -37,7 +37,8 @@ public class ValUtil {
         if (input instanceof Number) {
             return (Number) input;
         }
-        return new BigDecimal(input.toString());
+        // 快速失败：无效数字格式立即抛出异常
+        return new BigDecimal(input.toString().trim());
     }
 
     public static BigDecimal toBigDecimal(Object input) {
@@ -51,13 +52,13 @@ public class ValUtil {
         }
         if (o instanceof BigDecimal) {
             return (BigDecimal) o;
-        } else if (o instanceof Float) {
+        }
+        // Float 和 Double 需要通过 toString 避免精度问题
+        if (o instanceof Float || o instanceof Double) {
             return new BigDecimal(o.toString());
-        } else if (o instanceof Double) {
-            return new BigDecimal(o.toString());
-        } else if (o instanceof Integer) {
-            return new BigDecimal(o.intValue());
-        } else if (o instanceof Long) {
+        }
+        // Integer 和 Long 可以直接转换
+        if (o instanceof Integer || o instanceof Long) {
             return new BigDecimal(o.longValue());
         }
         return new BigDecimal(o.toString());
@@ -145,11 +146,15 @@ public class ValUtil {
             return (Boolean) input;
         }
         if (input instanceof Number) {
-            return ((Number) input).intValue()!=0;
+            return ((Number) input).intValue() != 0;
         }
-        String r = input.toString();
-
-        return !"false".equalsIgnoreCase(r) && !"0".equals(r) && !"".equals(r);
+        String r = input.toString().trim().toLowerCase();
+        // 明确的 false 值
+        if ("false".equals(r) || "0".equals(r) || "".equals(r)) {
+            return false;
+        }
+        // 其他都是 true
+        return true;
     }
 
     public static String toStrBlank(Object input) {
@@ -244,10 +249,9 @@ public class ValUtil {
             return null;
         }
         T[] re = (T[]) Array.newInstance(clazz, input.size());
-        final Iterator it = input.iterator();
         int i = 0;
-        while (it.hasNext()) {
-            re[i++] = toObj(it.next(), clazz);
+        for (Object item : input) {
+            re[i++] = toObj(item, clazz);
         }
         return re;
     }
@@ -297,13 +301,13 @@ public class ValUtil {
         if (input == null) {
             return defaultV;
         }
-        if (LocalDateTime.class.isAssignableFrom(input.getClass())) {
+        if (input instanceof LocalDateTime) {
             return (LocalDateTime) input;
         }
-        if (Date.class.isAssignableFrom(input.getClass())) {
+        if (input instanceof Date) {
             return DateUtil.getLocalDateTime((Date) input);
         }
-        if (Number.class.isAssignableFrom(input.getClass())) {
+        if (input instanceof Number) {
             return DateUtil.getLocalDateTime(new Date(((Number) input).longValue()));
         }
         return DateUtil.getLocalDateTime(toStr(input), format);
@@ -328,16 +332,16 @@ public class ValUtil {
         if (input == null) {
             return defaultV;
         }
-        if (Date.class.isAssignableFrom(input.getClass())) {
+        if (input instanceof Date) {
             return (Date) input;
         }
-        if (Number.class.isAssignableFrom(input.getClass())) {
+        if (input instanceof Number) {
             return new Date(((Number) input).longValue());
         }
-        if (LocalDateTime.class.isAssignableFrom(input.getClass())) {
+        if (input instanceof LocalDateTime) {
             return DateUtil.getDate((LocalDateTime) input);
         }
-        if (LocalDate.class.isAssignableFrom(input.getClass())) {
+        if (input instanceof LocalDate) {
             return DateUtil.getDate((LocalDate) input);
         }
         return DateUtil.getDate(toStr(input), format);
@@ -375,12 +379,17 @@ public class ValUtil {
     static {
         natveConverts.put(String.class, ValUtil::toStr);
         natveConverts.put(Integer.class, ValUtil::toInt);
+        natveConverts.put(int.class, ValUtil::toInt);
         natveConverts.put(Long.class, ValUtil::toLong);
+        natveConverts.put(long.class, ValUtil::toLong);
         natveConverts.put(Date.class, ValUtil::toDate);
         natveConverts.put(BigDecimal.class, ValUtil::toBigDecimal);
         natveConverts.put(Float.class, ValUtil::toFloat);
+        natveConverts.put(float.class, ValUtil::toFloat);
         natveConverts.put(Double.class, ValUtil::toDouble);
+        natveConverts.put(double.class, ValUtil::toDouble);
         natveConverts.put(Boolean.class, ValUtil::toBoolean);
+        natveConverts.put(boolean.class, ValUtil::toBoolean);
         natveConverts.put(LocalDateTime.class, ValUtil::toLocalDateTime);
         natveConverts.put(null, input -> input);
     }
@@ -433,17 +442,19 @@ public class ValUtil {
         if (cs == null) {
             return true;
         }
+        if (cs instanceof CharSequence) {
+            return ((CharSequence) cs).length() == 0;
+        }
         if (cs instanceof Collection) {
             return ((Collection) cs).isEmpty();
-        } else if (cs instanceof Map) {
-            return ((Map) cs).isEmpty();
-        } else if (cs.getClass().isArray()) {
-            return ((Object[]) cs).length == 0;
-        } else if (cs instanceof CharSequence) {
-            return ((CharSequence) cs).length() == 0;
-        } else {
-            return false;
         }
+        if (cs instanceof Map) {
+            return ((Map) cs).isEmpty();
+        }
+        if (cs.getClass().isArray()) {
+            return Array.getLength(cs) == 0;  // 支持所有数组类型（包括基本类型数组）
+        }
+        return false;
     }
 
 

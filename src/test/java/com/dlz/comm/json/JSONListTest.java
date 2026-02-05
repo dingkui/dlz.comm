@@ -457,7 +457,6 @@ class JSONListTest {
         void testTypeMismatch() {
             JSONList jsonList = new JSONList();
             jsonList.add("不是数字的字符串");
-            
             // 字符串转数字应该返回null或默认值
             assertThrows(NumberFormatException.class, () -> jsonList.getInt(0));
             assertThrows(NumberFormatException.class, () -> jsonList.getInt(0, -1));
