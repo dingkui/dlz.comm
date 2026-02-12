@@ -6,7 +6,10 @@ import com.dlz.comm.util.StringUtils;
 import com.dlz.comm.util.VAL;
 import com.dlz.comm.util.ValUtil;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * JSON映射类
