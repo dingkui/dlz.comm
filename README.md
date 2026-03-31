@@ -199,27 +199,96 @@ User user = params.as(User.class);
 | Hutool JSONUtil | 工具集 | 功能全 | JSONMap 更聚焦，体积更小 |
 > **Jackson 负责"搬运"，JSONMap 负责"加工"，完美互补。**
 ---
-## 📖 详细文档
+## 🤖 AI 辅助开发
 
-### 🎯 功能导航
-- [🎯 功能导航 - 从入门到精通](docs/features.md) - 特色功能、实用功能、彩蛋功能完整索引
+JSONMap 专为 AI 辅助开发优化，让 AI 生成的代码减少 90% 冗余！
 
-### 核心工具
-- [📘 JSONMap & JSONList 完整指南](docs/jsonmap-jsonlist.md) - JSON 数据处理核心工具
-- [📗 核心工具集概览](docs/core.md) - 所有工具的快速入门
-- [ 📝 核心原则](docs/fail-fast-principle.md)  - 快速失败原则
+### 如何让 AI 快速理解 JSONMap？
 
-### 应用场景
-- [🎯 应用场景与痛点分析](docs/scenarios.md) - 四大核心场景、痛点对比、适用项目类型
-- [🔥 @SetValue 注解指南](docs/bean-mapping.md) - 扁平 Bean ↔ 嵌套 JSON 双向映射
-- [🤖 AI 友好开发指南](docs/ai-friendly.md) - 让 AI 生成的代码减少 90% 冗余
+**方法 1：直接告诉 AI**（推荐）
+```
+请阅读这个文档，然后帮我写代码：
+https://github.com/dingkui/dlz.comm/blob/main/docs/AI-速读指南.md
+```
 
-### 工具类文档
-- [🔧 JacksonUtil](docs/jacksonutil.md) - JSON 序列化与路径取值
-- [📅 DateUtil](docs/dateutil.md) - 日期时间处理
-- [🔤 StringUtils](docs/stringutils.md) - 字符串处理
-- [🔄 ValUtil](docs/valutil.md) - 类型转换工具
-- [💾 Cache](docs/cache.md) - 缓存工具
+**方法 2：在 Cursor/Copilot 中添加到上下文**
+1. 打开 `docs/AI-速读指南.md`
+2. 使用 `@文件` 或 `#文件` 添加到对话
+3. 让 AI 基于文档生成代码
+
+**方法 3：复制核心 API 到提示词**
+```java
+// 告诉 AI 这些核心用法
+String city = new JSONMap(json).getStr("user.profile.city");
+JSONMap config = new JSONMap().set("server.host", "localhost");
+Integer age = map.getInt("age", 0);
+```
+
+### AI 生成代码示例
+
+**提示词**：
+```
+我有一个微信支付回调的 JSON，需要提取订单信息。
+请使用 JSONMap 来处理，参考：docs/AI-速读指南.md
+```
+
+**AI 会生成**：
+```java
+String json = request.getBody();
+JSONMap response = new JSONMap(json);
+
+if (response.getInt("code") != 0) {
+    return "支付失败";
+}
+
+String orderId = response.getStr("data.order.orderId");
+Integer amount = response.getInt("data.order.amount");
+String openid = response.getStr("data.user.openid");
+```
+
+---
+
+## 📖 完整文档
+
+### 🤖 AI 助手专用
+- [🤖 AI 速读指南](docs/AI-速读指南.md) - 30 秒掌握核心要点，快速生成正确代码
+
+### 🚀 快速开始
+- [📚 文档总导航](docs/00-文档导航.md) - 完整文档索引，推荐学习路径
+- [⚡ 五分钟上手](docs/第01章-快速入门/1.2-五分钟上手.md) - 最快上手指南
+- [💡 核心概念](docs/第01章-快速入门/1.3-核心概念.md) - 理解设计理念
+
+### 📘 核心功能
+- [📗 JSONMap 完整指南](docs/第02章-核心功能/2.1-JSONMap完整指南.md) - 深层路径、智能构建、类型转换
+- [📙 JSONList 完整指南](docs/第02章-核心功能/2.2-JSONList完整指南.md) - 负索引、类型安全访问
+- [🎯 深层路径详解](docs/第02章-核心功能/2.3-深层路径详解.md) - 路径语法完整说明
+
+### 🔧 工具类库
+- [🔄 ValUtil - 类型转换](docs/第03章-工具类库/3.1-ValUtil-类型转换.md) - 万能类型转换器
+- [🔧 JacksonUtil - JSON处理](docs/第03章-工具类库/3.2-JacksonUtil-JSON处理.md) - JSON 序列化工具
+- [📅 DateUtil - 日期处理](docs/第03章-工具类库/3.3-DateUtil-日期处理.md) - 日期时间工具
+- [📝 工具类速查表](docs/第03章-工具类库/3.7-工具类速查表.md) - 所有工具快速查找
+
+### 🎓 高级特性
+- [🔥 @SetValue 注解映射](docs/第04章-高级特性/4.1-SetValue注解映射.md) - 扁平 Bean ↔ 嵌套 JSON 双向映射
+- [📐 有界宽容原则](docs/第04章-高级特性/4.4-有界宽容原则.md) - 核心设计原则
+- [⚡ 性能优化技巧](docs/第04章-高级特性/4.5-性能优化技巧.md) - 最佳实践
+
+### 💼 实战场景
+- [🌐 API 响应处理](docs/第05章-实战场景/5.2-API响应处理.md) - 解析第三方 API
+- [📋 表单数据处理](docs/第05章-实战场景/5.3-表单数据处理.md) - 表单验证与转换
+- [💾 数据库 JSON 字段](docs/第05章-实战场景/5.5-数据库JSON字段.md) - MySQL/PostgreSQL JSON 字段处理
+- [📊 实际案例集](docs/第05章-实战场景/5.7-实际案例集.md) - 电商、权限、报表等真实案例
+
+### 🔌 框架集成
+- [🍃 Spring Boot 集成](docs/第06章-框架集成/6.1-SpringBoot集成.md) - Spring Boot 项目集成指南
+- [🗄️ MyBatis 集成](docs/第06章-框架集成/6.3-MyBatis集成.md) - MyBatis 结果映射
+- [🤖 AI 辅助开发](docs/第06章-框架集成/6.4-AI辅助开发.md) - Cursor/Copilot 使用技巧
+
+### 📖 附录
+- [❓ 常见问题 FAQ](docs/第07章-附录/7.2-常见问题FAQ.md) - 问题解答
+- [📊 性能测试报告](docs/第07章-附录/7.1-性能测试报告.md) - 性能数据
+- [📋 API 索引](docs/第07章-附录/7.5-API索引.md) - 完整 API 列表
 
 ---
 ## 💬 常见问题
@@ -261,7 +330,7 @@ User user = params.as(User.class);
 <summary><b>Q: 性能怎么样？</b></summary>
 
 底层就是 `HashMap`，性能与原生 Map 一致。
- - [性能测试报告](docs/REAL_PERFORMANCE_REPORT.md) 
+ - [性能测试报告](docs/第07章-附录/7.1-性能测试报告.md) 
 
 </details>
 
