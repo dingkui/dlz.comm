@@ -62,13 +62,88 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
         if(obj == null) {
             return;
         }
-        String str = obj.toString().trim().replaceAll("//.*", "");
+        String str = removeComments(obj,true);
         if(JacksonUtil.isJsonObj(str)) {
             putAll(JacksonUtil.readValue(str));
         } else {
             throw new SystemException("参数不能转换成JSONMap:" + str);
         }
     }
+
+    /**
+     * 使用字符序列构造JSONMap
+     *
+     * @param obj 字符序列，必须是有效的JSON字符串
+     */
+    public JSONMap(CharSequence obj,boolean removeComments) {
+        super();
+        if(obj == null || obj.length()==0) {
+            return;
+        }
+        String str = removeComments(obj,removeComments);
+        if(JacksonUtil.isJsonObj(str)) {
+            putAll(JacksonUtil.readValue(str));
+        } else {
+            throw new SystemException("参数不能转换成JSONMap:" + str);
+        }
+    }
+
+
+    private static String removeComments(CharSequence obj,boolean removeComments) {
+        String json = obj.toString().trim();
+        if(!removeComments){
+            return json;
+        }
+
+        char[] chars = json.toCharArray();
+        int len = chars.length;
+        StringBuilder result = new StringBuilder(len);
+        boolean inString = false;
+
+        for (int i = 0; i < len; i++) {
+            char c = chars[i];
+
+            if (inString) {
+                result.append(c);
+                if (c == '\\' && i + 1 < len) {
+                    result.append(chars[++i]);
+                } else if (c == '"') {
+                    inString = false;
+                }
+                continue;
+            }
+
+            if (c == '"') {
+                inString = true;
+                result.append(c);
+            } else if (c == '/' && i + 1 < len) {
+                char next = chars[i + 1];
+                if (next == '/') {
+                    i += 2;
+                    while (i < len && chars[i] != '\n' && chars[i] != '\r') {
+                        i++;
+                    }
+                    if (i < len) {
+                        result.append(chars[i]);
+                    }
+                    i--;
+                } else if (next == '*') {
+                    i += 2;
+                    while (i + 1 < len && !(chars[i] == '*' && chars[i + 1] == '/')) {
+                        i++;
+                    }
+                    i++;
+                } else {
+                    result.append(c);
+                }
+            } else {
+                result.append(c);
+            }
+        }
+
+        return result.toString();
+    }
+
 
     /**
      * 使用键值对构造JSONMap
