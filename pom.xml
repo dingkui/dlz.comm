@@ -4,11 +4,11 @@
     <parent>
         <groupId>top.dlzio</groupId>
         <artifactId>dlz.parent</artifactId>
-        <version>6.6.1</version>
+        <version>6.6.2</version>
     </parent>
     <artifactId>dlz.comm</artifactId>
     <name>dlz.comm</name>
-    <version>6.6.1-SNAPSHOT</version>
+    <version>6.6.2-SNAPSHOT</version>
     <packaging>jar</packaging>
     <description>像JavaScript一样在Java中“丝滑”操作JSON</description>
     <url>https://github.com/dingkui/dlz.comm.git</url>
