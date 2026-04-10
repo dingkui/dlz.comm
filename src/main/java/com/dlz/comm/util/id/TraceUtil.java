@@ -1,4 +1,4 @@
-package com.dlz.comm.util.encry;
+package com.dlz.comm.util.id;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;

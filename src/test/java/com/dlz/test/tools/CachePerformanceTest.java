@@ -1,7 +1,6 @@
 package com.dlz.test.tools;
 
-import com.dlz.comm.util.encry.TraceUtil;
-import com.dlz.comm.util.encry.UuidUtil;
+import com.dlz.comm.util.id.UuidUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 

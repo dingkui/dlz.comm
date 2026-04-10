@@ -1,4 +1,4 @@
-package com.dlz.comm.util.encry;
+package com.dlz.comm.util.id;
 
 import java.util.UUID;
 
@@ -12,7 +12,7 @@ public class UuidUtil {
 
 	public static String shortUuid() {
 		StringBuffer shortBuffer = new StringBuffer();
-		String uuid = UUID.randomUUID().toString().replace("-", "");
+		String uuid = uuid();
 		for (int i = 0; i < 8; i++) {
 			String str = uuid.substring(i * 4, i * 4 + 4);
 			int x = Integer.parseInt(str, 16);
@@ -21,6 +21,9 @@ public class UuidUtil {
 		return shortBuffer.toString();
 	}
     public static String uuid() {
-        return UUID.randomUUID().toString().replace("-", "");
+        return randomUUID().replace("-", "");
+    }
+    public static String randomUUID() {
+        return UUID.randomUUID().toString();
     }
 }
