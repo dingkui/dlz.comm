@@ -1,6 +1,7 @@
 package com.dlz.test.tools;
 
 import com.dlz.comm.util.encry.TraceUtil;
+import com.dlz.comm.util.encry.UuidUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
@@ -19,7 +20,7 @@ public class CachePerformanceTest {
         List<String> keys = new ArrayList<>();
         List<Integer> indexs = new ArrayList<>();
         for (int i = 0; i < mapSize; i++) {
-            keys.add(TraceUtil.generateShortUuid());
+            keys.add(UuidUtil.shortUuid());
         }
         List<String> errKey = keys.stream().map(item->item.substring(1)+"_").collect(Collectors.toList());
         for (int i = 0; i < readSize; i++) {
@@ -46,7 +47,7 @@ public class CachePerformanceTest {
         List<String> keys = new ArrayList<>();
         List<Integer> indexs = new ArrayList<>();
         for (int i = 0; i < mapSize; i++) {
-            keys.add(TraceUtil.generateShortUuid());
+            keys.add(UuidUtil.shortUuid());
         }
         List<String> errKey = keys.stream().map(item->item.substring(1)+"_").collect(Collectors.toList());
         for (int i = 0; i < readSize; i++) {
