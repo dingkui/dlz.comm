@@ -270,6 +270,166 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
         return this;
     }
 
+
+
+    /**
+     * 按层次删除值，支持多级键删除
+     *
+     * @param key 多级键，
+     *   如：a.b.c.d
+     *       a[0][1].c.d
+     *       a[0].b[1].d
+     *       a.b[1].c
+     * @return 当前实例
+     */
+    public JSONMap removes(String key) {
+        if(StringUtils.isEmpty(key)) {
+            throw new SystemException("key不能为空");
+        }
+
+        // 使用 splitKey 拆分键
+        VAL<String, String> keys = JacksonUtil.splitKey(key);
+        String currentKey = keys.v1;
+        String remainingKey = keys.v2;
+
+        // 判断当前键是否包含数组索引
+        int bracketIndex = currentKey.indexOf("[");
+
+        if(bracketIndex == -1) {
+            // 情况1: 普通键，如 a 或 user
+            if(remainingKey == null) {
+                // 已经是最后一级，直接删除
+                remove(currentKey);
+            } else {
+                // 还有下一级，需要获取子对象
+                Object existing = get(currentKey);
+
+                if(existing == null) {
+                    // 父对象不存在，无需删除
+                    return this;
+                } else if(existing instanceof JSONMap) {
+                    // 递归删除子键
+                    JSONMap childMap = (JSONMap) existing;
+                    childMap.removes(remainingKey);
+                } else {
+                    throw new SystemException("键 '" + currentKey + "' 的值类型不匹配，期望 JSONMap，实际为 " + existing.getClass().getSimpleName());
+                }
+            }
+        } else {
+            // 情况2: 包含数组索引，如 a[0] 或 [0]
+            handleArrayKeyRemove(currentKey, remainingKey);
+        }
+
+        return this;
+    }
+
+    /**
+     * 处理包含数组索引的键删除
+     *
+     * @param currentKey 当前键，如 a[0][1] 或 [0]
+     * @param remainingKey 剩余键
+     */
+    private void handleArrayKeyRemove(String currentKey, String remainingKey) {
+        // 解析数组键，如 a[0][1] -> arrayName=a, indices=[0,1]
+        String arrayName;
+        List<Integer> indices = new ArrayList<>();
+
+        if(currentKey.startsWith("[")) {
+            // 以 [ 开头，如 [0] 或 [0][1]
+            arrayName = "";
+            parseArrayIndices(currentKey, 0, indices);
+        } else {
+            // 普通形式，如 a[0] 或 a[0][1]
+            int firstBracket = currentKey.indexOf("[");
+            arrayName = currentKey.substring(0, firstBracket);
+            parseArrayIndices(currentKey, firstBracket, indices);
+        }
+
+        // 获取数组
+        Object existing = arrayName.isEmpty() ? null : get(arrayName);
+        
+        if(existing == null) {
+            // 数组不存在，无需删除
+            return;
+        }
+
+        JSONList list;
+        if(existing instanceof JSONList) {
+            list = (JSONList) existing;
+        } else if(existing instanceof List) {
+            list = new JSONList((List<?>) existing);
+        } else {
+            throw new SystemException("键 '" + arrayName + "' 的值类型不匹配，期望 JSONList，实际为 " + existing.getClass().getSimpleName());
+        }
+
+        // 递归处理多维数组索引删除
+        removeArrayValue(list, indices, 0, remainingKey);
+    }
+
+    /**
+     * 递归删除数组值
+     *
+     * @param list 当前数组
+     * @param indices 索引列表
+     * @param currentLevel 当前处理的索引层级
+     * @param remainingKey 剩余键
+     */
+    private void removeArrayValue(JSONList list, List<Integer> indices, int currentLevel, String remainingKey) {
+        int index = indices.get(currentLevel);
+
+        // 处理负数索引
+        if(index < 0) {
+            index = list.size() + index;
+        }
+
+        // 检查索引是否有效
+        if(index < 0 || index >= list.size()) {
+            // 索引越界，无需删除
+            return;
+        }
+
+        if(currentLevel == indices.size() - 1) {
+            // 最后一个索引
+            if(remainingKey == null) {
+                // 没有剩余键，直接删除数组元素
+                list.remove(index);
+            } else {
+                // 还有剩余键，需要获取子对象
+                Object existing = list.get(index);
+
+                if(existing == null) {
+                    // 子对象不存在，无需删除
+                    return;
+                } else if(existing instanceof JSONMap) {
+                    // 递归删除子键
+                    JSONMap childMap = (JSONMap) existing;
+                    childMap.removes(remainingKey);
+                } else {
+                    throw new SystemException("数组索引 [" + index + "] 的值类型不匹配，期望 JSONMap，实际为 " + existing.getClass().getSimpleName());
+                }
+            }
+        } else {
+            // 还有更多索引，需要获取嵌套数组
+            Object existing = list.get(index);
+
+            if(existing == null) {
+                // 嵌套数组不存在，无需删除
+                return;
+            }
+
+            JSONList childList;
+            if(existing instanceof JSONList) {
+                childList = (JSONList) existing;
+            } else if(existing instanceof List) {
+                childList = new JSONList((List<?>) existing);
+            } else {
+                throw new SystemException("数组索引 [" + index + "] 的值类型不匹配，期望 JSONList，实际为 " + existing.getClass().getSimpleName());
+            }
+
+            removeArrayValue(childList, indices, currentLevel + 1, remainingKey);
+        }
+    }
+
     /**
      * 处理包含数组索引的键
      *
