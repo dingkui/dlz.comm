@@ -32,7 +32,7 @@ String city = json.getStr("user.profile.addresses[0].city");
 <dependency>
     <groupId>top.dlzio</groupId>
     <artifactId>dlz-comm</artifactId>
-    <version>6.5.1</version>
+    <version>6.6.3</version>
 </dependency>
 ```
 ### 2. 开始使用
@@ -249,6 +249,9 @@ String openid = response.getStr("data.user.openid");
 ---
 
 ## 📖 完整文档
+
+### 🧭 项目总览
+- [🎯 项目速览与推广建议](docs/项目速览与推广建议.md) - 系统特色、适用场景、对外推广角度
 
 ### 🤖 AI 助手专用
 - [🤖 AI 速读指南](docs/AI-速读指南.md) - 30 秒掌握核心要点，快速生成正确代码
