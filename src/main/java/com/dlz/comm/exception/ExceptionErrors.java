@@ -11,12 +11,12 @@ public class ExceptionErrors {
         addErrors(9997, "JSP内容异常");
         addErrors(9998, "参数提交异常");
         addErrors(9999, "JSP异常");
-        addErrors(1000, "数据库连接异常");
-        addErrors(1001, "数据库执行sql异常");
-        addErrors(1002, "数据库参数校验异常");
-        addErrors(1003, "数据库执行其他异常");
-        addErrors(1004, "数据库结果异常");
-        addErrors(1005, "数据转换异常");
+//        addErrors(1000, "数据库连接异常");
+//        addErrors(1001, "数据库执行sql异常");
+//        addErrors(1002, "数据库参数校验异常");
+//        addErrors(1003, "数据库执行其他异常");
+//        addErrors(1004, "数据库结果异常");
+//        addErrors(1005, "数据转换异常");
         addErrors(2001, "非法访问异常");
         addErrors(3001, "业务异常");
         addErrors(3002, "代码异常");
