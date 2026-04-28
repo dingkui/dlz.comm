@@ -63,8 +63,15 @@ public class JSONMap extends HashMap<String, Object> implements IUniversalVals {
             return;
         }
         String str = removeComments(obj,true);
+        if(str.length()==0) {
+            return;
+        }
         if(JacksonUtil.isJsonObj(str)) {
-            putAll(JacksonUtil.readValue(str));
+            try {
+                putAll(JacksonUtil.readValue(str));
+            } catch (Exception e) {
+                throw new SystemException("构造JSONMap失败:" + str);
+            }
         } else {
             throw new SystemException("参数不能转换成JSONMap:" + str);
         }

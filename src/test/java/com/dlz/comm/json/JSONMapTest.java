@@ -141,6 +141,275 @@ class JSONMapTest {
             assertThrows(SystemException.class, () -> new JSONMap(invalidJson));
         }
 
+        @Test
+        @DisplayName("JSON字符串构造函数 - 空对象和边界情况")
+        void testJsonStringEmptyAndBoundary() {
+            // 空对象
+            JSONMap empty = new JSONMap("{}");
+            assertEquals(0, empty.size());
+            assertEquals("{}", empty.toString());
+            
+            // 带空格的空对象
+            JSONMap emptyWithSpace = new JSONMap("{ }");
+            assertEquals(0, emptyWithSpace.size());
+            assertEquals("{}", emptyWithSpace.toString());
+            
+            // 前后空格
+            JSONMap withPadding = new JSONMap("  {  }  ");
+            assertEquals(0, withPadding.size());
+            assertEquals("{}", withPadding.toString());
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 不带引号的键（简化JSON）")
+        void testJsonStringUnquotedKeys() {
+            // 单个键值对，键不带引号
+            JSONMap map1 = new JSONMap("{a:1}");
+            assertEquals(1, map1.size());
+            assertEquals(Integer.valueOf(1), map1.getInt("a"));
+            assertEquals("{\"a\":1}", map1.toString());
+            
+            // 多个键值对，键都不带引号
+            JSONMap map2 = new JSONMap("{a:1,b:2,c:3}");
+            assertEquals(3, map2.size());
+            assertEquals(Integer.valueOf(1), map2.getInt("a"));
+            assertEquals(Integer.valueOf(2), map2.getInt("b"));
+            assertEquals(Integer.valueOf(3), map2.getInt("c"));
+            
+            // 混合类型值
+            JSONMap map3 = new JSONMap("{name:\"test\",age:25,active:true}");
+            assertEquals(3, map3.size());
+            assertEquals("test", map3.getStr("name"));
+            assertEquals(25, map3.getInt("age"));
+            assertTrue(map3.getBoolean("active"));
+
+            // 非法字段
+            assertThrows(SystemException.class, () -> new JSONMap("{name:test,age:25,active:true}"));
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 嵌套结构（简化JSON）")
+        void testJsonStringNestedStructure() {
+            // 一层嵌套
+            JSONMap nested1 = new JSONMap("{a:{b:1}}");
+            assertEquals(1, nested1.size());
+            assertEquals(Integer.valueOf(1), nested1.getInt("a.b"));
+            assertEquals("{\"a\":{\"b\":1}}", nested1.toString());
+            
+            // 多层嵌套
+            JSONMap nested2 = new JSONMap("{a:{b:{c:1}}}");
+            assertEquals(1, nested2.size());
+            assertEquals(Integer.valueOf(1), nested2.getInt("a.b.c"));
+            
+            // 嵌套数组
+            JSONMap nested3 = new JSONMap("{items:[1,2,3]}");
+            assertEquals(1, nested3.size());
+            assertEquals(3, nested3.getList("items").size());
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 包含注释的JSON")
+        void testJsonStringWithComments() {
+            // 单行注释
+            JSONMap withComment1 = new JSONMap("{\n" +
+                    "    a: 1, // 这是注释\n" +
+                    "    b: 2  // 这也是注释\n" +
+                    "}");
+            assertEquals(2, withComment1.size());
+            assertEquals(Integer.valueOf(1), withComment1.getInt("a"));
+            assertEquals(Integer.valueOf(2), withComment1.getInt("b"));
+            
+            // 多行注释混合
+            JSONMap withComment2 = new JSONMap("{\n" +
+                    "    // 用户信息\n" +
+                    "    name: \"张三\",\n" +
+                    "    /* 年龄 */\n" +
+                    "    age: 25\n" +
+                    "}");
+            assertEquals(2, withComment2.size());
+            assertEquals("张三", withComment2.getStr("name"));
+            assertEquals(Integer.valueOf(25), withComment2.getInt("age"));
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 特殊字符和转义")
+        void testJsonStringSpecialCharacters() {
+            // 包含换行符的字符串
+            JSONMap withNewline = new JSONMap("{\"text\":\"line1\\nline2\"}");
+            assertEquals(1, withNewline.size());
+            assertTrue(withNewline.getStr("text").contains("\n"));
+            
+            // 包含制表符
+            JSONMap withTab = new JSONMap("{\"text\":\"col1\\tcol2\"}");
+            assertEquals(1, withTab.size());
+            assertTrue(withTab.getStr("text").contains("\t"));
+            
+            // 包含引号
+            JSONMap withQuote = new JSONMap("{\"text\":\"say \\\"hello\\\"\"}");
+            assertEquals(1, withQuote.size());
+            assertTrue(withQuote.getStr("text").contains("\""));
+            
+            // 包含反斜杠
+            JSONMap withBackslash = new JSONMap("{\"path\":\"C:\\\\Users\\\\test\"}");
+            assertEquals(1, withBackslash.size());
+            assertTrue(withBackslash.getStr("path").contains("\\"));
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - Unicode和中文字符")
+        void testJsonStringUnicodeAndChinese() {
+            // 中文字符
+            JSONMap chinese = new JSONMap("{\"name\":\"张三\",\"city\":\"北京\"}");
+            assertEquals(2, chinese.size());
+            assertEquals("张三", chinese.getStr("name"));
+            assertEquals("北京", chinese.getStr("city"));
+            
+            // Emoji表情
+            JSONMap emoji = new JSONMap("{\"emoji\":\"😀😃😄\"}");
+            assertEquals(1, emoji.size());
+            assertEquals("😀😃😄", emoji.getStr("emoji"));
+            
+            // 混合语言
+            JSONMap mixed = new JSONMap("{\"cn\":\"中文\",\"en\":\"English\",\"jp\":\"日本語\"}");
+            assertEquals(3, mixed.size());
+            assertEquals("中文", mixed.getStr("cn"));
+            assertEquals("English", mixed.getStr("en"));
+            assertEquals("日本語", mixed.getStr("jp"));
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 各种数值类型")
+        void testJsonStringNumericTypes() {
+            // 整数
+            JSONMap intVal = new JSONMap("{\"num\":123}");
+            assertEquals(Integer.valueOf(123), intVal.getInt("num"));
+            
+            // 负数
+            JSONMap negative = new JSONMap("{\"num\":-456}");
+            assertEquals(Integer.valueOf(-456), negative.getInt("num"));
+            
+            // 浮点数
+            JSONMap floatVal = new JSONMap("{\"num\":12.34}");
+            assertEquals(Double.valueOf(12.34), floatVal.getDouble("num"));
+            
+            // 科学计数法
+            JSONMap scientific = new JSONMap("{\"num\":1.23e10}");
+            assertNotNull(scientific.getDouble("num"));
+            
+            // 零值
+            JSONMap zero = new JSONMap("{\"num\":0}");
+            assertEquals(Integer.valueOf(0), zero.getInt("num"));
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 布尔值和null")
+        void testJsonStringBooleanAndNull() {
+            // true
+            JSONMap trueVal = new JSONMap("{\"flag\":true}");
+            assertEquals(Boolean.TRUE, trueVal.getBoolean("flag"));
+            
+            // false
+            JSONMap falseVal = new JSONMap("{\"flag\":false}");
+            assertEquals(Boolean.FALSE, falseVal.getBoolean("flag"));
+            
+            // null
+            JSONMap nullVal = new JSONMap("{\"data\":null}");
+            assertNull(nullVal.get("data"));
+            
+            // 混合
+            JSONMap mixed = new JSONMap("{\"a\":true,\"b\":false,\"c\":null}");
+            assertEquals(3, mixed.size());
+            assertEquals(Boolean.TRUE, mixed.getBoolean("a"));
+            assertEquals(Boolean.FALSE, mixed.getBoolean("b"));
+            assertNull(mixed.get("c"));
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 数组类型")
+        void testJsonStringArrayTypes() {
+            // 数字数组
+            JSONMap numArray = new JSONMap("{\"arr\":[1,2,3]}");
+            assertEquals(1, numArray.size());
+            assertEquals(3, numArray.getList("arr").size());
+            
+            // 字符串数组
+            JSONMap strArray = new JSONMap("{\"arr\":[\"a\",\"b\",\"c\"]}");
+            assertEquals(3, strArray.getList("arr").size());
+            
+            // 混合类型数组
+            JSONMap mixedArray = new JSONMap("{\"arr\":[1,\"text\",true,null]}");
+            assertEquals(4, mixedArray.getList("arr").size());
+            
+            // 嵌套数组
+            JSONMap nestedArray = new JSONMap("{\"matrix\":[[1,2],[3,4]]}");
+            assertEquals(2, nestedArray.getList("matrix").size());
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 空字符串和空白字符串")
+        void testJsonStringEmptyAndWhitespaceStrings() {
+            // 空字符串应该创建空对象
+            JSONMap emptyStr = new JSONMap("");
+            assertEquals(0, emptyStr.size());
+            
+            // 纯空格字符串应该创建空对象
+            JSONMap whitespaceStr = new JSONMap("   ");
+            assertEquals(0, whitespaceStr.size());
+
+            // 只有换行
+            JSONMap newlineStr = new JSONMap("\n\n");
+            assertEquals(0, newlineStr.size());
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 无效格式抛出异常")
+        void testJsonStringInvalidFormatsThrowException() {
+            // 缺少右括号
+            assertThrows(SystemException.class, () -> new JSONMap("{"));
+            assertThrows(SystemException.class, () -> new JSONMap("{\"key\":\"value\""));
+            
+            // 缺少左括号
+            assertThrows(SystemException.class, () -> new JSONMap("}"));
+            assertThrows(SystemException.class, () -> new JSONMap("\"key\":\"value\"}"));
+            
+            // 括号不匹配
+            assertThrows(SystemException.class, () -> new JSONMap("{]"));
+            assertThrows(SystemException.class, () -> new JSONMap("[}"));
+            
+            // 不是JSON格式
+            assertThrows(SystemException.class, () -> new JSONMap("plain text"));
+            assertThrows(SystemException.class, () -> new JSONMap("12345"));
+            assertThrows(SystemException.class, () -> new JSONMap("true"));
+            
+            // 语法错误
+            assertThrows(SystemException.class, () -> new JSONMap("{key:}"));
+            assertThrows(SystemException.class, () -> new JSONMap("{:value}"));
+            assertThrows(SystemException.class, () -> new JSONMap("{a:1,b:}"));
+        }
+
+        @Test
+        @DisplayName("JSON字符串构造函数 - 复杂实际场景")
+        void testJsonStringComplexRealWorldScenarios() {
+            // API响应格式
+            JSONMap apiResponse = new JSONMap("{\"code\":200,\"msg\":\"success\",\"data\":{\"id\":1,\"name\":\"test\"}}");
+            assertEquals(3, apiResponse.size());
+            assertEquals(Integer.valueOf(200), apiResponse.getInt("code"));
+            assertEquals("success", apiResponse.getStr("msg"));
+            assertEquals(Integer.valueOf(1), apiResponse.getInt("data.id"));
+            
+            // 配置格式
+            JSONMap config = new JSONMap("{\"server\":{\"host\":\"localhost\",\"port\":8080},\"database\":{\"url\":\"jdbc:mysql://localhost:3306/db\",\"username\":\"root\"}}");
+            assertEquals(2, config.size());
+            assertEquals("localhost", config.getStr("server.host"));
+            assertEquals(Integer.valueOf(8080), config.getInt("server.port"));
+            
+            // 用户信息格式
+            JSONMap userInfo = new JSONMap("{\"user\":{\"id\":123,\"profile\":{\"name\":\"张三\",\"email\":\"zhangsan@example.com\",\"phone\":\"13800138000\"}},\"roles\":[\"admin\",\"user\"]}");
+            assertEquals(2, userInfo.size());
+            assertEquals("张三", userInfo.getStr("user.profile.name"));
+            assertEquals(2, userInfo.getList("roles").size());
+        }
+
 
         @Test
         @DisplayName("键值对构造函数测试")
@@ -253,8 +522,7 @@ class JSONMapTest {
 
             paras.put("a", "not a number");
             //有错误类型无法转换的，as结果为null
-            as = paras.as(TestBean.class);
-            assertNull(as); //转换失败，输出null
+            assertThrows(SystemException.class, () -> paras.as(TestBean.class));
         }
     }
 

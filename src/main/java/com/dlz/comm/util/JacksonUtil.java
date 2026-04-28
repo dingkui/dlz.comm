@@ -223,9 +223,10 @@ public class JacksonUtil {
         try {
             return objectMapper.readValue(content, valueType);
         } catch (Exception e) {
-            log.error("JacksonUtil.readValue error:valueType={} content={}", valueType, content);
+            String msg = "JSON反序列化转换失败:type="+valueType+" content="+content;
+            log.error(msg);
             log.error(ExceptionUtils.getStackTrace(e));
-            return null;
+            throw new SystemException(msg);
         }
     }
     /**
@@ -468,34 +469,29 @@ public class JacksonUtil {
      * @return 转换后的对象
      */
     public static <T> T coverObj(Object o, JavaType javaType) {
-        try {
-            if (o == null) {
-                return null;
-            }
-            Class valueType = javaType.getRawClass();
-            if (javaType.getBindings().size() == 0) {
-                if (valueType.isAssignableFrom(o.getClass())) {
-                    return (T) o;
-                }
-                if (valueType.isAssignableFrom(JSONList.class)) {
-                    return (T) new JSONList(o);
-                }
-                if (valueType.isAssignableFrom(JSONMap.class)) {
-                    return (T) new JSONMap(o);
-                }
-            }
-
-            String str;
-            if (o instanceof CharSequence) {
-                str = o.toString().trim();
-            } else {
-                str = getJson(o);
-            }
-            return readValue(str, javaType);
-        } catch (Exception e) {
-            log.error(ExceptionUtils.getStackTrace(e));
+        if (o == null) {
+            return null;
         }
-        return null;
+        Class valueType = javaType.getRawClass();
+        if (javaType.getBindings().size() == 0) {
+            if (valueType.isAssignableFrom(o.getClass())) {
+                return (T) o;
+            }
+            if (valueType.isAssignableFrom(JSONList.class)) {
+                return (T) new JSONList(o);
+            }
+            if (valueType.isAssignableFrom(JSONMap.class)) {
+                return (T) new JSONMap(o);
+            }
+        }
+
+        String str;
+        if (o instanceof CharSequence) {
+            str = o.toString().trim();
+        } else {
+            str = getJson(o);
+        }
+        return readValue(str, javaType);
     }
 
 //    public List<String> t1(){
@@ -804,26 +800,32 @@ public class JacksonUtil {
         }
     }
 
-    private static Pattern JsonObjPattern = Pattern.compile("^\\{(([\"\\w]+:.+)||)\\}$");
+    private static Pattern JsonObjPattern = Pattern.compile("^\\{.*\\}$");
     private static Pattern JsonArrayPattern = Pattern.compile("^\\[.*\\]$");
 
     /**
-     * 判断字符串是否为JSON对象格式
+     * 判断字符串是否为JSON对象格式（浅层校验）
      *
      * @param str 待检测的字符串
      * @return 如果是JSON对象格式返回true，否则返回false
      */
     public static boolean isJsonObj(String str) {
+        if(str == null){
+            return false;
+        }
         return JsonObjPattern.matcher(str.replaceAll("\\s", "")).matches();
     }
 
     /**
-     * 判断字符串是否为JSON数组格式
+     * 判断字符串是否为JSON数组格式（浅层校验）
      *
      * @param str 待检测的字符串
      * @return 如果是JSON数组格式返回true，否则返回false
      */
     public static boolean isJsonArray(String str) {
+        if(str == null){
+            return false;
+        }
         return JsonArrayPattern.matcher(str.replaceAll("\\s", "")).find();
     }
 //    public static void main(String[] args) {

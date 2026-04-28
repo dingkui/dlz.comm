@@ -3,6 +3,7 @@ package com.dlz.comm.util;
 import com.dlz.comm.exception.SystemException;
 import com.dlz.comm.json.JSONList;
 import com.dlz.comm.json.JSONMap;
+import com.dlz.test.beans.TestBean;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -118,11 +119,8 @@ class JacksonUtilTest {
         @Test
         @DisplayName("无效JSON处理测试")
         void testInvalidJsonHandling() {
-            JSONMap result = JacksonUtil.readValue("{invalid json}", JSONMap.class);
-            assertNull(result);
-            
-            List<String> listResult = JacksonUtil.readListValue("{invalid json}", String.class);
-            assertNull(listResult);
+            assertThrows(SystemException.class, () -> JacksonUtil.readValue("{invalid json}", JSONMap.class));
+            assertThrows(SystemException.class, () -> JacksonUtil.readListValue("{invalid json}", String.class));
         }
     }
 
@@ -311,27 +309,373 @@ class JacksonUtilTest {
     class JsonFormatDetectionTests {
 
         @Test
-        @DisplayName("isJsonObj方法测试")
-        void testIsJsonObj() {
+        @DisplayName("isJsonObj - 空对象")
+        void testIsJsonObjEmptyObject() {
             assertTrue(JacksonUtil.isJsonObj("{}"));
+            assertTrue(JacksonUtil.isJsonObj("{ }"));
             assertTrue(JacksonUtil.isJsonObj(" { } "));
-            assertTrue(JacksonUtil.isJsonObj("{\"key\":\"value\"}"));
-            
-            assertFalse(JacksonUtil.isJsonObj("[]"));
-            assertFalse(JacksonUtil.isJsonObj("[1,2,3]"));
-            assertFalse(JacksonUtil.isJsonObj("plain text"));
+            assertTrue(JacksonUtil.isJsonObj("\t{}\t"));
+            assertTrue(JacksonUtil.isJsonObj("\n{}\n"));
         }
 
         @Test
-        @DisplayName("isJsonArray方法测试")
-        void testIsJsonArray() {
-            assertTrue(JacksonUtil.isJsonArray("[]"));
-            assertTrue(JacksonUtil.isJsonArray(" [ ] "));
-            assertTrue(JacksonUtil.isJsonArray("[1,2,3]"));
+        @DisplayName("isJsonObj - 简单键值对")
+        void testIsJsonObjSimpleKeyValue() {
+            assertTrue(JacksonUtil.isJsonObj("{\"key\":\"value\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"name\":\"测试\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"age\":25}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"active\":true}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"data\":null}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 带连字符的键")
+        void testIsJsonObjKeyWithHyphen() {
+            assertTrue(JacksonUtil.isJsonObj("{\"xx-xx\":123}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"my-key\":\"value\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"user-name\":\"张三\"}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 多个键值对")
+        void testIsJsonObjMultipleKeys() {
+            assertTrue(JacksonUtil.isJsonObj("{\"a\":1,\"b\":2}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"name\":\"test\",\"age\":20}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"x\":1,\"y\":2,\"z\":3}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 嵌套对象")
+        void testIsJsonObjNestedObject() {
+            assertTrue(JacksonUtil.isJsonObj("{\"outer\":{\"inner\":\"value\"}}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"user\":{\"name\":\"test\",\"age\":25}}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 包含数组")
+        void testIsJsonObjWithArray() {
+            assertTrue(JacksonUtil.isJsonObj("{\"items\":[1,2,3]}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"list\":[\"a\",\"b\"]}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 复杂结构")
+        void testIsJsonObjComplexStructure() {
+            assertTrue(JacksonUtil.isJsonObj("{\"data\":{\"items\":[{\"id\":1},{\"id\":2}]}}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 带空格和换行")
+        void testIsJsonObjWithWhitespace() {
+            assertTrue(JacksonUtil.isJsonObj("{ \"key\" : \"value\" }"));
+            assertTrue(JacksonUtil.isJsonObj("{\n  \"name\": \"test\",\n  \"age\": 25\n}"));
+            assertTrue(JacksonUtil.isJsonObj("{  \"a\"  :  1  ,  \"b\"  :  2  }"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - null和边界值")
+        void testIsJsonObjNullAndEdgeCases() {
+            assertFalse(JacksonUtil.isJsonObj(null));
+            assertFalse(JacksonUtil.isJsonObj(""));
+            assertFalse(JacksonUtil.isJsonObj("   "));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 非JSON对象格式")
+        void testIsJsonObjNonObjectFormat() {
+            assertFalse(JacksonUtil.isJsonObj("[]"));
+            assertFalse(JacksonUtil.isJsonObj("[1,2,3]"));
+            assertFalse(JacksonUtil.isJsonObj("plain text"));
+            assertFalse(JacksonUtil.isJsonObj("123"));
+            assertFalse(JacksonUtil.isJsonObj("true"));
+            assertFalse(JacksonUtil.isJsonObj("null"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 不完整或错误格式")
+        void testIsJsonObjIncompleteOrInvalidFormat() {
+            // 缺少闭合括号
+            assertFalse(JacksonUtil.isJsonObj("{"));
+            assertFalse(JacksonUtil.isJsonObj("{\"key\":\"value\""));
+            assertFalse(JacksonUtil.isJsonObj("{\"key\":"));
             
+            // 只有右括号
+            assertFalse(JacksonUtil.isJsonObj("}"));
+            assertFalse(JacksonUtil.isJsonObj("}\"key\":\"value\"{"));
+            
+            // 括号不匹配
+            assertFalse(JacksonUtil.isJsonObj("{]"));
+            assertFalse(JacksonUtil.isJsonObj("[}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 不带引号的键（非标准JSON但能识别为对象格式）")
+        void testIsJsonObjUnquotedKeys() {
+            // 浅层校验只检查 {} 结构，不验证内部格式
+            assertTrue(JacksonUtil.isJsonObj("{a:1}"));
+            assertTrue(JacksonUtil.isJsonObj("{name:test}"));
+            assertTrue(JacksonUtil.isJsonObj("{a:1,b:2}"));
+            assertTrue(JacksonUtil.isJsonObj("{key:value}"));
+            assertTrue(JacksonUtil.isJsonObj("{x:123,y:true,z:null}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 特殊字符和转义")
+        void testIsJsonObjSpecialCharacters() {
+            assertTrue(JacksonUtil.isJsonObj("{\"key\\nwith\\nnewline\":\"value\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"path\":\"C:\\\\Users\\\\test\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"quote\":\"say \\\"hello\\\"\"}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 数字类型值")
+        void testIsJsonObjNumericValues() {
+            assertTrue(JacksonUtil.isJsonObj("{\"int\":123}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"float\":12.34}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"negative\":-56}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"scientific\":1.23e10}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"zero\":0}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 字符串值包含特殊内容")
+        void testIsJsonObjStringValuesWithSpecialContent() {
+            assertTrue(JacksonUtil.isJsonObj("{\"url\":\"https://example.com\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"email\":\"test@example.com\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"chinese\":\"中文测试\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"emoji\":\"😀😃😄\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"empty\":\"\"}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 深层嵌套结构")
+        void testIsJsonObjDeepNesting() {
+            assertTrue(JacksonUtil.isJsonObj("{\"a\":{\"b\":{\"c\":{\"d\":1}}}}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"level1\":{\"level2\":{\"level3\":{\"level4\":{\"level5\":\"deep\"}}}}}"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 数组中包含复杂对象")
+        void testIsJsonObjArrayWithComplexObjects() {
+            assertTrue(JacksonUtil.isJsonObj("{\"users\":[{\"name\":\"Alice\",\"age\":25},{\"name\":\"Bob\",\"age\":30}]}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"matrix\":[[1,2,3],[4,5,6],[7,8,9]]}"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 空数组")
+        void testIsJsonArrayEmptyArray() {
+            assertTrue(JacksonUtil.isJsonArray("[]"));
+            assertTrue(JacksonUtil.isJsonArray("[ ]"));
+            assertTrue(JacksonUtil.isJsonArray(" [ ] "));
+            assertTrue(JacksonUtil.isJsonArray("\t[]\t"));
+            assertTrue(JacksonUtil.isJsonArray("\n[]\n"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 简单元素")
+        void testIsJsonArraySimpleElements() {
+            assertTrue(JacksonUtil.isJsonArray("[1,2,3]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"a\",\"b\",\"c\"]"));
+            assertTrue(JacksonUtil.isJsonArray("[true,false,true]"));
+            assertTrue(JacksonUtil.isJsonArray("[null,null]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 混合类型")
+        void testIsJsonArrayMixedTypes() {
+            assertTrue(JacksonUtil.isJsonArray("[1,\"text\",true,null]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"a\",123,false]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 嵌套结构")
+        void testIsJsonArrayNestedStructure() {
+            assertTrue(JacksonUtil.isJsonArray("[[1,2],[3,4]]"));
+            assertTrue(JacksonUtil.isJsonArray("[{\"a\":1},{\"b\":2}]"));
+            assertTrue(JacksonUtil.isJsonArray("[{\"nested\":{\"deep\":\"value\"}}]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 带空格")
+        void testIsJsonArrayWithWhitespace() {
+            assertTrue(JacksonUtil.isJsonArray("[ 1 , 2 , 3 ]"));
+            assertTrue(JacksonUtil.isJsonArray("[ \"a\" , \"b\" ]"));
+            assertTrue(JacksonUtil.isJsonArray("[\n  1,\n  2\n]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - null和边界值")
+        void testIsJsonArrayNullAndEdgeCases() {
+            assertFalse(JacksonUtil.isJsonArray(null));
+            assertFalse(JacksonUtil.isJsonArray(""));
+            assertFalse(JacksonUtil.isJsonArray("   "));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 非JSON数组格式")
+        void testIsJsonArrayNonArrayFormat() {
             assertFalse(JacksonUtil.isJsonArray("{}"));
             assertFalse(JacksonUtil.isJsonArray("{\"key\":\"value\"}"));
             assertFalse(JacksonUtil.isJsonArray("plain text"));
+            assertFalse(JacksonUtil.isJsonArray("123"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 不完整或错误格式")
+        void testIsJsonArrayIncompleteOrInvalidFormat() {
+            // 缺少闭合括号
+            assertFalse(JacksonUtil.isJsonArray("["));
+            assertFalse(JacksonUtil.isJsonArray("[1,2,3"));
+            assertFalse(JacksonUtil.isJsonArray("[1,"));
+            
+            // 只有右括号
+            assertFalse(JacksonUtil.isJsonArray("]"));
+            assertFalse(JacksonUtil.isJsonArray("]1,2,3["));
+            
+            // 括号不匹配
+            assertFalse(JacksonUtil.isJsonArray("[}"));
+            assertFalse(JacksonUtil.isJsonArray("{]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 不带引号的元素（非标准JSON但能识别为数组格式）")
+        void testIsJsonArrayUnquotedElements() {
+            // 浅层校验只检查 [] 结构，不验证内部格式
+            assertTrue(JacksonUtil.isJsonArray("[a,b,c]"));
+            assertTrue(JacksonUtil.isJsonArray("[1,2,3]"));
+            assertTrue(JacksonUtil.isJsonArray("[x:y,z:w]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 数字类型元素")
+        void testIsJsonArrayNumericElements() {
+            assertTrue(JacksonUtil.isJsonArray("[123]"));
+            assertTrue(JacksonUtil.isJsonArray("[1.23,4.56,7.89]"));
+            assertTrue(JacksonUtil.isJsonArray("[-1,-2,-3]"));
+            assertTrue(JacksonUtil.isJsonArray("[1.23e10,4.56e-2]"));
+            assertTrue(JacksonUtil.isJsonArray("[0]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 字符串包含特殊内容")
+        void testIsJsonArrayStringWithSpecialContent() {
+            assertTrue(JacksonUtil.isJsonArray("[\"https://example.com\"]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"test@example.com\"]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"中文\",\"English\",\"日本語\"]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"😀😃😄\"]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"\"]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 深层嵌套结构")
+        void testIsJsonArrayDeepNesting() {
+            assertTrue(JacksonUtil.isJsonArray("[[[1]]]"));
+            assertTrue(JacksonUtil.isJsonArray("[[[\"deep\"]]]"));
+            assertTrue(JacksonUtil.isJsonArray("[{\"a\":{\"b\":{\"c\":1}}}]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 对象数组")
+        void testIsJsonArrayOfObjects() {
+            assertTrue(JacksonUtil.isJsonArray("[{\"name\":\"Alice\"},{\"name\":\"Bob\"}]"));
+            assertTrue(JacksonUtil.isJsonArray("[{\"id\":1,\"value\":\"a\"},{\"id\":2,\"value\":\"b\"},{\"id\":3,\"value\":\"c\"}]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 混合复杂结构")
+        void testIsJsonArrayMixedComplexStructure() {
+            assertTrue(JacksonUtil.isJsonArray("[1,\"text\",true,null,{\"key\":\"value\"},[1,2,3]]"));
+            assertTrue(JacksonUtil.isJsonArray("[{\"users\":[{\"name\":\"Alice\"}]},{\"count\":42}]"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 单个元素")
+        void testIsJsonArraySingleElement() {
+            assertTrue(JacksonUtil.isJsonArray("[1]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"single\"]"));
+            assertTrue(JacksonUtil.isJsonArray("[true]"));
+            assertTrue(JacksonUtil.isJsonArray("[null]"));
+            assertTrue(JacksonUtil.isJsonArray("[{\"only\":\"one\"}]"));
+            assertTrue(JacksonUtil.isJsonArray("[[nested]]"));
+        }
+
+        @Test
+        @DisplayName("isJsonObj vs isJsonArray - 互斥性测试")
+        void testIsJsonObjVsIsJsonArrayMutualExclusion() {
+            // JSON对象应该被isJsonObj识别，但不被isJsonArray识别
+            String[] jsonObjects = {"{}", "{\"key\":\"value\"}", "{a:1}", "{\"nested\":{}}"};
+            for (String obj : jsonObjects) {
+                assertTrue(JacksonUtil.isJsonObj(obj), "应该是JSON对象: " + obj);
+                assertFalse(JacksonUtil.isJsonArray(obj), "不应该是JSON数组: " + obj);
+            }
+            
+            // JSON数组应该被isJsonArray识别，但不被isJsonObj识别
+            String[] jsonArrays = {"[]", "[1,2,3]", "[a,b,c]", "[{\"nested\":[]}]"};
+            for (String arr : jsonArrays) {
+                assertFalse(JacksonUtil.isJsonObj(arr), "不应该是JSON对象: " + arr);
+                assertTrue(JacksonUtil.isJsonArray(arr), "应该是JSON数组: " + arr);
+            }
+        }
+
+        @Test
+        @DisplayName("isJsonObj/isJsonArray - 常见错误格式")
+        void testCommonInvalidFormats() {
+            // 这些既不是JSON对象也不是JSON数组
+            String[] invalidFormats = {
+                "",
+                "   ",
+                null,
+                "plain text",
+                "12345",
+                "true",
+                "false",
+                "null",
+                "{",
+                "}",
+                "[",
+                "]",
+//                "{{}}",
+//                "{}{}",
+//                "[][]",
+                "}{",
+                "][",
+                "abc{def}",
+                "xyz[123]"
+            };
+            
+            for (String invalid : invalidFormats) {
+                if (invalid == null || invalid.trim().isEmpty()) {
+                    assertFalse(JacksonUtil.isJsonObj(invalid), "null/空字符串不应是JSON对象");
+                    assertFalse(JacksonUtil.isJsonArray(invalid), "null/空字符串不应是JSON数组");
+                } else {
+                    assertFalse(JacksonUtil.isJsonObj(invalid), "不应是JSON对象: " + invalid);
+                    assertFalse(JacksonUtil.isJsonArray(invalid), "不应是JSON数组: " + invalid);
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("isJsonObj - 性能相关的简单场景")
+        void testIsJsonObjPerformanceRelevantCases() {
+            // 这些是实际使用中常见的简单场景，应该快速通过
+            assertTrue(JacksonUtil.isJsonObj("{}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"id\":1}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"status\":\"ok\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"code\":200,\"msg\":\"success\"}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"data\":{}}"));
+            assertTrue(JacksonUtil.isJsonObj("{\"result\":[]}"));
+        }
+
+        @Test
+        @DisplayName("isJsonArray - 性能相关的简单场景")
+        void testIsJsonArrayPerformanceRelevantCases() {
+            // 这些是实际使用中常见的简单场景，应该快速通过
+            assertTrue(JacksonUtil.isJsonArray("[]"));
+            assertTrue(JacksonUtil.isJsonArray("[1]"));
+            assertTrue(JacksonUtil.isJsonArray("[1,2,3]"));
+            assertTrue(JacksonUtil.isJsonArray("[\"a\",\"b\"]"));
+            assertTrue(JacksonUtil.isJsonArray("[{}]"));
+            assertTrue(JacksonUtil.isJsonArray("[[]]"));
         }
     }
 
