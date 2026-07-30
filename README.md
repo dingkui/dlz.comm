@@ -2,7 +2,7 @@
 
 `dlz.comm` 已停止作为项目主仓库名称使用，最新代码及版本发布请访问新的仓库：
 
-[[dlz-kit](./dlz-kit.git)]
+https://github.com/dingkui/dlz-kit.git
 
 后续更新将仅在新仓库中进行。
 
