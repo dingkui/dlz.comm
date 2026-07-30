@@ -1,3 +1,12 @@
+## 仓库迁移
+
+`dlz.comm` 已停止作为项目主仓库名称使用，最新代码及版本发布请访问新的仓库：
+
+`dlz-kit`
+
+后续更新将仅在新仓库中进行。
+
+
 # 🗡️ JSONMap —— Java 数据操作的瑞士军刀
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![JDK](https://img.shields.io/badge/JDK-8%20%7C%2011%20%7C%2017%20%7C%2021-green.svg)](https://www.oracle.com/java/)
